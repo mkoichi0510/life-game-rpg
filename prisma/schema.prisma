@@ -1,0 +1,182 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// カテゴリ（ユーザーが自由に作成・編集可能）
+model Category {
+  id              String   @id @default(cuid())
+  name            String
+  visible         Boolean  @default(true)
+  order           Int      @default(0)
+  rankWindowDays  Int      @default(7) // 週ランク判定期間
+  xpPerPlay       Int      @default(10) // 1プレイあたりのXP
+  xpPerSp         Int      @default(20) // SPに変換するために必要なXP
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  actions              Action[]
+  dailyCategoryResults DailyCategoryResult[]
+  playerState          PlayerCategoryState?
+  skillTrees           SkillTree[]
+  seasonalTitles       SeasonalTitle[]
+  spendLogs            SpendLog[]
+
+  @@index([visible, order])
+}
+
+// アクション（プレイ定義）
+model Action {
+  id         String   @id @default(cuid())
+  categoryId String
+  label      String
+  visible    Boolean  @default(true)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  category Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  playLogs PlayLog[]
+
+  @@index([categoryId, visible, order])
+}
+
+// プレイログ
+model PlayLog {
+  id       String   @id @default(cuid())
+  at       DateTime @default(now()) // ISO datetime
+  dayKey   String   // YYYY-MM-DD（ローカル）
+  actionId String
+  note     String?
+  createdAt DateTime @default(now())
+
+  action                Action                 @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  dailyCategoryResults  DailyCategoryResult[]
+
+  @@index([dayKey])
+  @@index([actionId])
+}
+
+// 日次リザルト（確定状態管理）
+model DailyResult {
+  dayKey      String   @id // YYYY-MM-DD
+  status      String   @default("draft") // "draft" | "confirmed"
+  confirmedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  categoryResults DailyCategoryResult[]
+}
+
+// 日次カテゴリ別リザルト
+model DailyCategoryResult {
+  id          String   @id @default(cuid())
+  dayKey      String
+  categoryId  String
+  playCount   Int      @default(0)
+  xpEarned    Int      @default(0)
+  spEarned    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  dailyResult DailyResult @relation(fields: [dayKey], references: [dayKey], onDelete: Cascade)
+  category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  playLogs    PlayLog[]
+
+  @@unique([dayKey, categoryId])
+  @@index([categoryId])
+}
+
+// プレイヤーのカテゴリ別ステータス
+model PlayerCategoryState {
+  id         String   @id @default(cuid())
+  categoryId String   @unique
+  xpTotal    Int      @default(0) // 確定済み累計XP
+  spUnspent  Int      @default(0) // 未使用SP
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+}
+
+// スキルツリー（恒久称号）
+model SkillTree {
+  id         String   @id @default(cuid())
+  categoryId String
+  name       String
+  visible    Boolean  @default(true)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  category   Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  skillNodes SkillNode[]
+
+  @@index([categoryId, visible, order])
+}
+
+// スキルノード（恒久称号の各段階）
+model SkillNode {
+  id        String   @id @default(cuid())
+  treeId    String
+  order     Int
+  title     String
+  costSp    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tree          SkillTree      @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  unlockedNodes UnlockedNode[]
+
+  @@unique([treeId, order])
+  @@index([treeId, order])
+}
+
+// 解放済みノード
+model UnlockedNode {
+  id         String   @id @default(cuid())
+  nodeId     String
+  unlockedAt DateTime @default(now())
+
+  node SkillNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@unique([nodeId])
+}
+
+// 週ランク称号（維持・変動型）
+model SeasonalTitle {
+  id           String   @id @default(cuid())
+  categoryId   String
+  label        String
+  minSpEarned  Int      // 直近N日で必要なSP合計
+  order        Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([categoryId, order])
+}
+
+// SP消費履歴
+model SpendLog {
+  id         String   @id @default(cuid())
+  at         DateTime @default(now())
+  categoryId String
+  type       String   // "unlock_node"など
+  costSp     Int
+  refId      String   // nodeIdなど
+  dayKey     String?  // YYYY-MM-DD
+  createdAt  DateTime @default(now())
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([categoryId, at])
+}
