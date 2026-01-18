@@ -1,0 +1,28 @@
+# mise configuration for Life Game RPG
+# https://mise.jdx.dev/configuration.html
+
+[tools]
+# Node.js LTS version (required for Next.js 16)
+node = "24.11.0"
+
+[env]
+# 環境変数（必要に応じて追加）
+# DATABASE_URL = "postgresql://lifegame:lifegame_dev@localhost:5432/lifegame_db"
+
+[tasks.setup]
+description = "プロジェクトの初期セットアップ"
+run = [
+  "npm install",
+  "npm run docker:up",
+  "npm run db:push",
+  "npm run db:generate",
+  "npm run db:seed"
+]
+
+[tasks.dev]
+description = "開発サーバーの起動"
+run = "npm run dev"
+
+[tasks.db]
+description = "Prisma Studioの起動"
+run = "npm run db:studio"
