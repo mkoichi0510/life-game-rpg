@@ -34,7 +34,7 @@ shadcn/ui を活用した統一的なコンポーネント設計と、RPG感を�
 |-----------|------|-----------|
 | shadcn/ui | UIコンポーネントベース | latest |
 | Radix UI | アクセシブルなプリミティブ | shadcn/ui に内包 |
-| Tailwind CSS | ユーティリティファーストCSS | 4.x |
+| Tailwind CSS | ユーティリティファーストCSS | 3.x（4.x安定版リリース後にアップグレード予定） |
 | Lucide React | アイコン | latest |
 | cva (class-variance-authority) | バリアント管理 | latest |
 | clsx / tailwind-merge | クラス結合 | latest |
@@ -623,6 +623,86 @@ WCAG AA準拠（4.5:1以上）を目標とする。
   value={progress}
   aria-label={`SP獲得まであと${remaining}XP`}
 />
+```
+
+### 7.4 スキルツリーのアクセシビリティ
+
+スキルツリー（`SkillTreeView`、`SkillNode`）は複雑なインタラクティブUIのため、追加のアクセシビリティ対応が必要。
+
+#### キーボードナビゲーション
+
+```tsx
+// SkillTreeView: ツリー全体のキーボード操作
+<div
+  role="tree"
+  aria-label="スキルツリー"
+  onKeyDown={(e) => {
+    switch (e.key) {
+      case "ArrowRight":
+      case "ArrowDown":
+        focusNextNode();
+        break;
+      case "ArrowLeft":
+      case "ArrowUp":
+        focusPrevNode();
+        break;
+      case "Enter":
+      case " ":
+        if (canUnlock) unlockNode();
+        break;
+    }
+  }}
+>
+  {nodes.map((node) => (
+    <SkillNode key={node.id} node={node} />
+  ))}
+</div>
+
+// SkillNode: 個別ノードのARIA属性
+<div
+  role="treeitem"
+  aria-selected={isSelected}
+  aria-disabled={!canUnlock}
+  aria-describedby={`${node.id}-description`}
+  tabIndex={isSelected ? 0 : -1}
+>
+  <span id={`${node.id}-description`} className="sr-only">
+    {node.title}、{isUnlocked ? "解放済み" : canUnlock ? `解放可能、${node.costSp}SP必要` : "解放不可"}
+  </span>
+</div>
+```
+
+#### フォーカス管理
+
+- フォーカスは常に1つのノードにのみ表示
+- Tab キーでツリー全体に入る/出る
+- 矢印キーでノード間を移動
+- 解放後はフォーカスを維持し、状態変化をアナウンス
+
+```tsx
+// 解放成功時のアナウンス
+<div aria-live="polite" className="sr-only">
+  {justUnlocked && `${node.title}を解放しました`}
+</div>
+```
+
+#### `prefers-reduced-motion` 対応
+
+```css
+/* アニメーション無効化 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-glow,
+  .animate-xp-pop,
+  .animate-fade-in {
+    animation: none;
+  }
+
+  /* 解放可能状態は静的なスタイルで表示 */
+  .skill-node-unlockable {
+    outline: 2px solid hsl(var(--unlockable));
+    outline-offset: 2px;
+  }
+}
 ```
 
 ---

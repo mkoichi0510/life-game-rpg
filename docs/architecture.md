@@ -36,7 +36,7 @@
 | Language | TypeScript | 5.x | 型安全 |
 | ORM | Prisma | 6.x | 型生成、マイグレーション |
 | Database | PostgreSQL | 17.x | 本番環境 |
-| Styling | Tailwind CSS | 4.x | ユーティリティファースト |
+| Styling | Tailwind CSS | 3.x（4.x安定版リリース後にアップグレード予定） | ユーティリティファースト |
 
 ### spec との差異：永続化方針
 
@@ -328,37 +328,38 @@ interface PlayerDomain {
 
 ```
 life-game-rpg/
-├── app/
-│   ├── page.tsx              # ホーム画面
-│   ├── play/
-│   │   └── page.tsx          # プレイ登録
-│   ├── result/
-│   │   └── page.tsx          # リザルト画面
-│   ├── skills/
-│   │   └── page.tsx          # スキルツリー
-│   ├── api/
+├── src/
+│   ├── app/
+│   │   ├── page.tsx              # ホーム画面
 │   │   ├── play/
-│   │   │   └── route.ts      # プレイ関連API
+│   │   │   └── page.tsx          # プレイ登録
 │   │   ├── result/
-│   │   │   └── route.ts      # リザルト関連API
-│   │   └── skills/
-│   │       └── route.ts      # スキル関連API
-│   └── layout.tsx
-├── components/
-│   ├── ui/                   # 汎用UIコンポーネント
-│   ├── play/                 # プレイ関連コンポーネント
-│   ├── result/               # リザルト関連コンポーネント
-│   └── skills/               # スキル関連コンポーネント
-├── lib/
-│   ├── prisma.ts             # Prismaクライアント
-│   ├── domains/
-│   │   ├── play.ts           # Play Domain
-│   │   ├── result.ts         # Result Domain
-│   │   ├── growth.ts         # Growth Domain
-│   │   └── player.ts         # Player Domain
-│   └── utils/
-│       ├── date.ts           # 日付ユーティリティ
-│       └── calc.ts           # 計算ユーティリティ
+│   │   │   └── page.tsx          # リザルト画面
+│   │   ├── skills/
+│   │   │   └── page.tsx          # スキルツリー
+│   │   ├── api/
+│   │   │   ├── play/
+│   │   │   │   └── route.ts      # プレイ関連API
+│   │   │   ├── result/
+│   │   │   │   └── route.ts      # リザルト関連API
+│   │   │   └── skills/
+│   │   │       └── route.ts      # スキル関連API
+│   │   └── layout.tsx
+│   ├── components/
+│   │   ├── ui/                   # 汎用UIコンポーネント
+│   │   ├── play/                 # プレイ関連コンポーネント
+│   │   ├── result/               # リザルト関連コンポーネント
+│   │   └── skills/               # スキル関連コンポーネント
+│   └── lib/
+│       ├── prisma.ts             # Prismaクライアント
+│       ├── domains/
+│       │   ├── play.ts           # Play Domain
+│       │   ├── result.ts         # Result Domain
+│       │   ├── growth.ts         # Growth Domain
+│       │   └── player.ts         # Player Domain
+│       └── utils/
+│           ├── date.ts           # 日付ユーティリティ
+│           └── calc.ts           # 計算ユーティリティ
 ├── prisma/
 │   ├── schema.prisma
 │   ├── seed.ts
@@ -490,13 +491,94 @@ interface ErrorResponse {
 }
 ```
 
+### クライアントサイドエラーバウンダリ
+
+React Error Boundary を使用して、クライアントサイドの予期しないエラーをキャッチし、アプリ全体のクラッシュを防ぐ。
+
+#### 使用方針
+
+```tsx
+// src/components/error-boundary.tsx
+"use client";
+
+import { Component, ReactNode } from "react";
+
+interface Props {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+  error?: Error;
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // エラーログ送信（将来的にSentry等と連携）
+    console.error("ErrorBoundary caught:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback ?? <DefaultErrorFallback />;
+    }
+    return this.props.children;
+  }
+}
+```
+
+#### エラー表示UIパターン
+
+```tsx
+// デフォルトのエラー表示
+function DefaultErrorFallback() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[200px] p-6">
+      <h2 className="text-lg font-semibold text-destructive">
+        エラーが発生しました
+      </h2>
+      <p className="mt-2 text-muted-foreground">
+        ページを再読み込みしてください
+      </p>
+      <Button
+        className="mt-4"
+        onClick={() => window.location.reload()}
+      >
+        再読み込み
+      </Button>
+    </div>
+  );
+}
+```
+
+#### 適用箇所
+
+| 箇所 | 目的 |
+|------|------|
+| `layout.tsx`（ルート） | アプリ全体のフォールバック |
+| 各画面コンポーネント | 画面単位でのエラー分離 |
+| `SkillTreeView` | 複雑なUIのエラー分離 |
+
 ---
 
 ## 10. セキュリティ考慮事項
 
+> ⚠️ **重要**: Phase 1 は認証なしのため、インターネットに公開しないこと。
+> ローカル環境または認証付きリバースプロキシ経由でのみ使用すること。
+
 ### Phase 1（シングルユーザー）
 
-- 認証なし
+- 認証なし（**公開デプロイ厳禁**）
 - 全データはサーバー側PostgreSQLに保存
 - SQLインジェクション対策: Prismaの型安全クエリ使用
 - XSS対策: Reactの自動エスケープ
