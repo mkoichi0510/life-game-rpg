@@ -580,6 +580,8 @@ flowchart TD
 
 ## 10. コンポーネント設計（参考）
 
+> 📌 詳細な実装仕様は [design-system.md](./design-system.md) を参照
+
 ### 共通コンポーネント
 
 | コンポーネント | 用途 |
