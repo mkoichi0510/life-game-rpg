@@ -205,19 +205,36 @@ async function registerPlay(actionId: string, note?: string): Promise<PlayLog> {
 
 ### dayKey算出ロジック
 
+**Phase 1 実装（シンプル版）:**
+
 ```typescript
+// 非推奨: 手動オフセット計算
+// const jstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+
+// 推奨: date-fns-tz を使用
+import { formatInTimeZone } from 'date-fns-tz';
+
 function formatDayKey(date: Date): string {
-  // JST (UTC+9) での日付を取得
-  const jstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
-  return jstDate.toISOString().slice(0, 10);
+  return formatInTimeZone(date, 'Asia/Tokyo', 'yyyy-MM-dd');
 }
 
 function getNextDayKey(dayKey: string): string {
-  const date = new Date(dayKey + "T00:00:00+09:00");
+  const date = new Date(dayKey + 'T00:00:00+09:00');
   date.setDate(date.getDate() + 1);
-  return date.toISOString().slice(0, 10);
+  return formatInTimeZone(date, 'Asia/Tokyo', 'yyyy-MM-dd');
 }
 ```
+
+**依存パッケージ:**
+
+```bash
+npm install date-fns date-fns-tz
+```
+
+**採用理由:**
+- 標準的なタイムゾーン処理
+- 将来のマルチタイムゾーン対応への拡張性
+- エッジケース（日付境界）の正確な処理
 
 ### 将来拡張（OQ-03）
 
@@ -490,7 +507,8 @@ function getRecentDayKeys(days: number): string[] {
 
 | ケース | 対応 |
 |--------|------|
-| Category削除でAction消失 | Cascade削除。PlayLog も消失。履歴喪失の警告を出すべき。 |
+| Category非表示化 | `visible=false` で論理削除。データは保持され振り返り可能。 |
+| Category物理削除（非推奨） | Cascade削除でPlayLog等も消失。Phase 1では提供しない。 |
 | SPがマイナスになる操作 | トランザクション内でチェック。ロールバック。 |
 | 同時に複数解放操作 | トランザクションで排他制御 |
 

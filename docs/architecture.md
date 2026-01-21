@@ -442,6 +442,54 @@ interface ErrorResponse {
 | `VALIDATION_ERROR` | 400 | バリデーションエラー |
 | `INTERNAL_ERROR` | 500 | サーバー内部エラー |
 
+### エラーレスポンス例
+
+**NOT_FOUND (404)**
+
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "指定されたリソースが見つかりません",
+    "details": {
+      "resource": "PlayLog",
+      "id": "clxxx123"
+    }
+  }
+}
+```
+
+**INSUFFICIENT_SP (400)**
+
+```json
+{
+  "error": {
+    "code": "INSUFFICIENT_SP",
+    "message": "SPが不足しています",
+    "details": {
+      "required": 5,
+      "available": 3,
+      "nodeId": "health-node-3"
+    }
+  }
+}
+```
+
+**VALIDATION_ERROR (400)**
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "入力値が不正です",
+    "details": {
+      "field": "note",
+      "reason": "最大500文字まで"
+    }
+  }
+}
+```
+
 ---
 
 ## 10. セキュリティ考慮事項
@@ -459,6 +507,48 @@ interface ErrorResponse {
 - 全モデルにuserId追加
 - Row Level Security検討
 - CSRF対策
+
+---
+
+## 11. データ削除ポリシー
+
+> 📌 **基本方針: 論理削除（`visible = false`）を採用し、履歴データを保持する**
+
+### 論理削除の採用理由
+
+- **振り返り可能**: 過去のプレイ履歴・成長記録をいつでも参照できる
+- **データ整合性**: 累計XP・SP・週ランク計算の正確性を維持
+- **復元可能**: 誤って非表示にしたカテゴリを簡単に復活できる
+- **監査証跡**: いつ何をしたかの記録が残る
+
+### 削除方法の比較
+
+| 方法 | 操作 | データ | 用途 |
+|------|------|--------|------|
+| **論理削除（推奨）** | `visible = false` | 保持 | 通常運用、カテゴリ整理 |
+| 物理削除（非推奨） | DELETE | 喪失 | 将来の管理機能として検討 |
+
+### 物理削除時の影響範囲（参考）
+
+Category を物理削除すると、以下が連鎖削除されます：
+- 全 Action（カテゴリ内の全アクション定義）
+- 全 PlayLog（過去の全プレイ記録）
+- 全 DailyCategoryResult（日次集計データ）
+- PlayerCategoryState（累計XP/SP）
+- 全 SkillTree / SkillNode / UnlockedNode（称号・解放履歴）
+- 全 SeasonalTitle（週ランク定義）
+- 全 SpendLog（SP消費履歴）
+
+### 実装指針
+
+**Phase 1:**
+- UI上で「削除」ボタンは `visible = false` を設定する論理削除として実装
+- 物理削除機能は提供しない
+- 非表示カテゴリは設定画面で再表示可能にする
+
+**将来（Phase 2以降）:**
+- 管理画面で「完全削除」機能を検討する場合は、確認ダイアログで影響範囲を明示
+- エクスポート機能と組み合わせ、削除前にバックアップを促す
 
 ---
 

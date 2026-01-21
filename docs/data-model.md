@@ -137,6 +137,36 @@ erDiagram
 - `at` と `dayKey` は異なる場合がある（確定後プレイの翌日回し時）
 - `dayKey` は論理的な所属日、`at` は物理的な登録時刻
 
+#### PlayLog と DailyCategoryResult の関連
+
+PlayLog と DailyCategoryResult は暗黙的な多対多関係を持つ。
+Prismaでは明示的な中間テーブルを使用する。
+
+**中間テーブル: _PlayLogToDailyCategoryResult**
+
+| カラム | 型 | 説明 |
+|--------|-----|------|
+| A | String | PlayLog.id |
+| B | String | DailyCategoryResult.id |
+
+**Prismaスキーマ例:**
+
+```prisma
+model PlayLog {
+  // ... 既存フィールド
+  dailyCategoryResults DailyCategoryResult[]
+}
+
+model DailyCategoryResult {
+  // ... 既存フィールド
+  playLogs PlayLog[]
+}
+```
+
+**備考:**
+- 1つのPlayLogは通常1つのDailyCategoryResultに属する
+- 多対多は将来の拡張（カテゴリ横断アクション等）に備えた設計
+
 ---
 
 ### DailyResult
@@ -388,8 +418,15 @@ SP消費履歴。監査・振り返り用。
 
 ## カスケード削除の影響範囲
 
+> 📌 **基本方針: `visible=false` による論理削除を採用**
+>
+> 過去の履歴を振り返れるよう、物理削除ではなく論理削除を推奨。
+> 詳細は [architecture.md](./architecture.md) の「11. データ削除ポリシー」を参照。
+
+### 物理削除時の連鎖（参考）
+
 ```
-Category を削除すると:
+Category を物理削除すると:
 ├── Action が削除
 │   └── PlayLog が削除
 ├── DailyCategoryResult が削除
@@ -401,7 +438,10 @@ Category を削除すると:
 └── SpendLog が削除
 ```
 
-**注意:** Category の物理削除は履歴データの喪失を伴うため、通常は `visible=false` による論理削除を推奨。
+**運用指針:**
+- 通常運用では `visible=false` で非表示化（データは保持）
+- 非表示カテゴリは設定画面から再表示可能
+- 物理削除は Phase 1 では提供しない
 
 ---
 
