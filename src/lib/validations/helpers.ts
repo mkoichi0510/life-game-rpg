@@ -17,3 +17,28 @@ export function formatZodError(error: ZodError) {
     { status: 400 }
   )
 }
+
+export function formatNotFoundError(resource: string, id: string) {
+  return NextResponse.json(
+    {
+      error: {
+        code: 'NOT_FOUND',
+        message: `指定された${resource}が見つかりません`,
+        details: { resource, id },
+      },
+    },
+    { status: 404 }
+  )
+}
+
+export function formatInternalError(message: string) {
+  return NextResponse.json(
+    {
+      error: {
+        code: 'INTERNAL_ERROR',
+        message,
+      },
+    },
+    { status: 500 }
+  )
+}
