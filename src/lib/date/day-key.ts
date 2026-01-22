@@ -7,6 +7,18 @@ import { formatInTimeZone } from "date-fns-tz";
 import { DEFAULT_TIMEZONE } from "./timezone";
 
 /**
+ * 値が非負（0以上）であることを検証
+ * @param value - 検証する値
+ * @param name - エラーメッセージ用のパラメータ名
+ * @throws 値が負の場合
+ */
+function assertNonNegative(value: number, name: string): void {
+  if (value < 0) {
+    throw new Error(`${name} must be non-negative, got ${value}`);
+  }
+}
+
+/**
  * DateオブジェクトをdayKey形式（YYYY-MM-DD）に変換
  * @param date - 変換する日付
  * @returns JST基準のdayKey文字列
@@ -36,10 +48,17 @@ export function getNextDayKey(dayKey: string): string {
 
 /**
  * 直近N日分のdayKey配列を取得（今日を含む）
- * @param days - 取得する日数
+ * @param days - 取得する日数（0以上）
  * @returns dayKeyの配列（新しい日付順）
+ * @throws daysが負の場合
  */
 export function getRecentDayKeys(days: number): string[] {
+  assertNonNegative(days, "days");
+
+  if (days === 0) {
+    return [];
+  }
+
   const result: string[] = [];
   const today = new Date();
 
