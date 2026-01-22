@@ -39,6 +39,13 @@
   - `?visible=true` で表示中のカテゴリのみフィルタ可能
 - **POST**: カテゴリ新規作成
 
+### Action API (`/api/actions`)
+
+- **GET**: アクション一覧取得（order昇順 → id昇順）
+  - `categoryId` 指定必須
+  - `?visible=true` で表示中のアクションのみフィルタ可能
+- **POST**: アクション新規作成
+
 ### 共通ユーティリティ
 
 #### 日付処理 (`src/lib/date/`)
@@ -64,6 +71,7 @@
 
 - `src/lib/validations/` にzodスキーマを配置
 - `category.ts`: カテゴリ作成用スキーマ
+- `action.ts`: アクション作成・一覧取得用スキーマ
 - `helpers.ts`: zodエラーをAPIレスポンス形式に変換するヘルパー
 
 ### テスト
@@ -81,7 +89,7 @@
 | 1 | #2 | Prismaスキーマ定義 | ✅ 完了 |
 | 2 | #3 | シードデータ作成 | ✅ 完了 |
 | 2 | #5 | Category API | ✅ 完了 |
-| 3 | #6 | Action API | ⬜ |
+| 3 | #6 | Action API | ✅ 完了 |
 | 4 | #7 | PlayLog API | ⬜ |
 | 5 | #8 | DailyResult API | ⬜ |
 | 6 | #9 | 日次確定API | ⬜ |
