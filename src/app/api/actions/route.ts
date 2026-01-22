@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createActionSchema, getActionsQuerySchema } from '@/lib/validations/action'
-import { formatZodError } from '@/lib/validations/helpers'
+import {
+  formatZodError,
+  formatNotFoundError,
+  formatInternalError,
+} from '@/lib/validations/helpers'
 
 /**
  * GET /api/actions
@@ -23,6 +27,15 @@ export async function GET(request: NextRequest) {
       return formatZodError(result.error)
     }
 
+    const category = await prisma.category.findUnique({
+      where: { id: result.data.categoryId },
+      select: { id: true },
+    })
+
+    if (!category) {
+      return formatNotFoundError('カテゴリ', result.data.categoryId)
+    }
+
     const actions = await prisma.action.findMany({
       where: {
         categoryId: result.data.categoryId,
@@ -34,15 +47,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ actions })
   } catch (error) {
     console.error('Failed to fetch actions:', error)
-    return NextResponse.json(
-      {
-        error: {
-          code: 'INTERNAL_ERROR',
-          message: 'アクションの取得に失敗しました',
-        },
-      },
-      { status: 500 }
-    )
+    return formatInternalError('アクションの取得に失敗しました')
   }
 }
 
@@ -65,19 +70,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!category) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'NOT_FOUND',
-            message: '指定されたカテゴリが見つかりません',
-            details: {
-              resource: 'Category',
-              id: result.data.categoryId,
-            },
-          },
-        },
-        { status: 404 }
-      )
+      return formatNotFoundError('カテゴリ', result.data.categoryId)
     }
 
     const action = await prisma.action.create({
@@ -92,14 +85,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ action }, { status: 201 })
   } catch (error) {
     console.error('Failed to create action:', error)
-    return NextResponse.json(
-      {
-        error: {
-          code: 'INTERNAL_ERROR',
-          message: 'アクションの作成に失敗しました',
-        },
-      },
-      { status: 500 }
-    )
+    return formatInternalError('アクションの作成に失敗しました')
   }
 }

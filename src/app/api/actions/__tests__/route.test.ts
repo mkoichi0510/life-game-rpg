@@ -57,6 +57,7 @@ describe('GET /api/actions', () => {
       },
     ]
 
+    vi.mocked(prisma.category.findUnique).mockResolvedValue({ id: 'cat-1' })
     vi.mocked(prisma.action.findMany).mockResolvedValue(mockActions)
 
     const request = createGetRequest(
@@ -88,6 +89,7 @@ describe('GET /api/actions', () => {
       },
     ]
 
+    vi.mocked(prisma.category.findUnique).mockResolvedValue({ id: 'cat-1' })
     vi.mocked(prisma.action.findMany).mockResolvedValue(mockActions)
 
     const request = createGetRequest(
@@ -107,7 +109,52 @@ describe('GET /api/actions', () => {
     })
   })
 
+  it('should return 404 when category does not exist', async () => {
+    vi.mocked(prisma.category.findUnique).mockResolvedValue(null)
+
+    const request = createGetRequest(
+      'http://localhost:3000/api/actions?categoryId=non-existent'
+    )
+    const response = await GET(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(404)
+    expect(data.error.code).toBe('NOT_FOUND')
+    expect(data.error.details.id).toBe('non-existent')
+  })
+
+  it('should trim whitespace from categoryId', async () => {
+    vi.mocked(prisma.category.findUnique).mockResolvedValue({ id: 'cat-1' })
+    vi.mocked(prisma.action.findMany).mockResolvedValue([])
+
+    const request = createGetRequest(
+      'http://localhost:3000/api/actions?categoryId=%20cat-1%20'
+    )
+    const response = await GET(request)
+
+    expect(response.status).toBe(200)
+    expect(prisma.category.findUnique).toHaveBeenCalledWith({
+      where: { id: 'cat-1' },
+      select: { id: true },
+    })
+  })
+
+  it('should return empty array when category exists but has no actions', async () => {
+    vi.mocked(prisma.category.findUnique).mockResolvedValue({ id: 'cat-1' })
+    vi.mocked(prisma.action.findMany).mockResolvedValue([])
+
+    const request = createGetRequest(
+      'http://localhost:3000/api/actions?categoryId=cat-1'
+    )
+    const response = await GET(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.actions).toEqual([])
+  })
+
   it('should return 500 on database error', async () => {
+    vi.mocked(prisma.category.findUnique).mockResolvedValue({ id: 'cat-1' })
     vi.mocked(prisma.action.findMany).mockRejectedValue(new Error('DB Error'))
 
     const request = createGetRequest(
