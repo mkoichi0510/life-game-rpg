@@ -29,8 +29,8 @@
 | Wave | Issue | タイトル | 状態 |
 |------|-------|---------|------|
 | 1 | #2 | Prismaスキーマ定義 | ✅ 完了 |
-| 2 | #3 | シードデータ作成 | ⬜ |
-| 2 | #5 | Category API | ⬜ |
+| 2 | #3 | シードデータ作成 | ✅ 完了 |
+| 2 | #5 | Category API | 🔄 PR #28 |
 | 3 | #6 | Action API | ⬜ |
 | 4 | #7 | PlayLog API | ⬜ |
 | 5 | #8 | DailyResult API | ⬜ |
