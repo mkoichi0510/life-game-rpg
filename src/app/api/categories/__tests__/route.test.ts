@@ -14,6 +14,10 @@ vi.mock('@/lib/prisma', () => ({
 
 import { prisma } from '@/lib/prisma'
 
+const createGetRequest = (url = 'http://localhost:3000/api/categories'): NextRequest => {
+  return new NextRequest(url, { method: 'GET' })
+}
+
 describe('GET /api/categories', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -47,7 +51,8 @@ describe('GET /api/categories', () => {
 
     vi.mocked(prisma.category.findMany).mockResolvedValue(mockCategories)
 
-    const response = await GET()
+    const request = createGetRequest()
+    const response = await GET(request)
     const data = await response.json()
 
     expect(response.status).toBe(200)
@@ -55,6 +60,7 @@ describe('GET /api/categories', () => {
     expect(data.categories[0].id).toBe('cat-1')
     expect(data.categories[1].id).toBe('cat-2')
     expect(prisma.category.findMany).toHaveBeenCalledWith({
+      where: undefined,
       orderBy: { id: 'asc' },
     })
   })
@@ -62,17 +68,88 @@ describe('GET /api/categories', () => {
   it('should return empty array when no categories exist', async () => {
     vi.mocked(prisma.category.findMany).mockResolvedValue([])
 
-    const response = await GET()
+    const request = createGetRequest()
+    const response = await GET(request)
     const data = await response.json()
 
     expect(response.status).toBe(200)
     expect(data.categories).toHaveLength(0)
   })
 
+  it('should filter by visible=true when query param is set', async () => {
+    const mockCategories = [
+      {
+        id: 'cat-1',
+        name: 'カテゴリ1',
+        visible: true,
+        order: 1,
+        rankWindowDays: 7,
+        xpPerPlay: 10,
+        xpPerSp: 20,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]
+
+    vi.mocked(prisma.category.findMany).mockResolvedValue(mockCategories)
+
+    const request = createGetRequest('http://localhost:3000/api/categories?visible=true')
+    const response = await GET(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.categories).toHaveLength(1)
+    expect(prisma.category.findMany).toHaveBeenCalledWith({
+      where: { visible: true },
+      orderBy: { id: 'asc' },
+    })
+  })
+
+  it('should return all categories when visible param is not true', async () => {
+    const mockCategories = [
+      {
+        id: 'cat-1',
+        name: 'カテゴリ1',
+        visible: true,
+        order: 1,
+        rankWindowDays: 7,
+        xpPerPlay: 10,
+        xpPerSp: 20,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 'cat-2',
+        name: 'カテゴリ2',
+        visible: false,
+        order: 2,
+        rankWindowDays: 7,
+        xpPerPlay: 10,
+        xpPerSp: 20,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]
+
+    vi.mocked(prisma.category.findMany).mockResolvedValue(mockCategories)
+
+    const request = createGetRequest('http://localhost:3000/api/categories?visible=false')
+    const response = await GET(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.categories).toHaveLength(2)
+    expect(prisma.category.findMany).toHaveBeenCalledWith({
+      where: undefined,
+      orderBy: { id: 'asc' },
+    })
+  })
+
   it('should return 500 on database error', async () => {
     vi.mocked(prisma.category.findMany).mockRejectedValue(new Error('DB Error'))
 
-    const response = await GET()
+    const request = createGetRequest()
+    const response = await GET(request)
     const data = await response.json()
 
     expect(response.status).toBe(500)

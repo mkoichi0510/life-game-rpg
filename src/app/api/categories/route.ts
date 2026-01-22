@@ -1,13 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createCategorySchema } from '@/lib/validations/category'
+import { formatZodError } from '@/lib/validations/helpers'
 
 /**
  * GET /api/categories
  * カテゴリ一覧を取得（id昇順）
+ * クエリパラメータ:
+ *   - visible=true: 表示中のカテゴリのみ取得
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const visibleOnly = searchParams.get('visible') === 'true'
+
     const categories = await prisma.category.findMany({
+      where: visibleOnly ? { visible: true } : undefined,
       orderBy: { id: 'asc' },
     })
 
@@ -33,118 +41,20 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, visible, order, rankWindowDays, xpPerPlay, xpPerSp } = body
+    const result = createCategorySchema.safeParse(body)
 
-    // バリデーション: name は必須
-    if (!name || typeof name !== 'string' || name.trim() === '') {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: '入力値が不正です',
-            details: {
-              field: 'name',
-              reason: 'カテゴリ名は必須です',
-            },
-          },
-        },
-        { status: 400 }
-      )
-    }
-
-    // バリデーション: name の長さ制限（最大50文字）
-    if (name.length > 50) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: '入力値が不正です',
-            details: {
-              field: 'name',
-              reason: 'カテゴリ名は最大50文字までです',
-            },
-          },
-        },
-        { status: 400 }
-      )
-    }
-
-    // バリデーション: order は数値
-    if (order !== undefined && (typeof order !== 'number' || !Number.isInteger(order))) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: '入力値が不正です',
-            details: {
-              field: 'order',
-              reason: '表示順序は整数で指定してください',
-            },
-          },
-        },
-        { status: 400 }
-      )
-    }
-
-    // バリデーション: rankWindowDays は正の整数
-    if (rankWindowDays !== undefined && (typeof rankWindowDays !== 'number' || !Number.isInteger(rankWindowDays) || rankWindowDays < 1)) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: '入力値が不正です',
-            details: {
-              field: 'rankWindowDays',
-              reason: 'ランク判定期間は1以上の整数で指定してください',
-            },
-          },
-        },
-        { status: 400 }
-      )
-    }
-
-    // バリデーション: xpPerPlay は正の整数
-    if (xpPerPlay !== undefined && (typeof xpPerPlay !== 'number' || !Number.isInteger(xpPerPlay) || xpPerPlay < 1)) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: '入力値が不正です',
-            details: {
-              field: 'xpPerPlay',
-              reason: 'プレイ当たりXPは1以上の整数で指定してください',
-            },
-          },
-        },
-        { status: 400 }
-      )
-    }
-
-    // バリデーション: xpPerSp は正の整数
-    if (xpPerSp !== undefined && (typeof xpPerSp !== 'number' || !Number.isInteger(xpPerSp) || xpPerSp < 1)) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: '入力値が不正です',
-            details: {
-              field: 'xpPerSp',
-              reason: 'SP変換に必要なXPは1以上の整数で指定してください',
-            },
-          },
-        },
-        { status: 400 }
-      )
+    if (!result.success) {
+      return formatZodError(result.error)
     }
 
     const category = await prisma.category.create({
       data: {
-        name: name.trim(),
-        visible: visible ?? true,
-        order: order ?? 0,
-        rankWindowDays: rankWindowDays ?? 7,
-        xpPerPlay: xpPerPlay ?? 10,
-        xpPerSp: xpPerSp ?? 20,
+        name: result.data.name,
+        visible: result.data.visible,
+        order: result.data.order,
+        rankWindowDays: result.data.rankWindowDays,
+        xpPerPlay: result.data.xpPerPlay,
+        xpPerSp: result.data.xpPerSp,
       },
     })
 
