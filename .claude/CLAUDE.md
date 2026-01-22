@@ -21,3 +21,23 @@
 - **スタイリング**: Tailwind CSS 3.x + shadcn/ui を使用
 - **データベース**: PostgreSQL + Prisma ORM
 - **Phase 1 制限**: 認証なしのため、公開デプロイ厳禁（ローカル環境のみ）
+
+## 実装済み機能
+
+### Category API (`/api/categories`)
+
+- **GET**: カテゴリ一覧取得（id昇順）
+  - `?visible=true` で表示中のカテゴリのみフィルタ可能
+- **POST**: カテゴリ新規作成
+
+### バリデーション
+
+- `src/lib/validations/` にzodスキーマを配置
+- `category.ts`: カテゴリ作成用スキーマ
+- `helpers.ts`: zodエラーをAPIレスポンス形式に変換するヘルパー
+
+### テスト
+
+- **フレームワーク**: Vitest
+- **実行コマンド**: `npm run test:run`
+- テストファイルは `__tests__/` ディレクトリに配置
