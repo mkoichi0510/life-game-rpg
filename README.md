@@ -19,14 +19,14 @@
 - **Backend**: Next.js API Routes
 - **Database**: PostgreSQL 17 (Docker)
 - **ORM**: Prisma 6
-- **Runtime**: Node.js 24 (LTS) + npm 11
+- **Runtime**: Node.js 24 (LTS) + pnpm
 - **Bundler**: Turbopack (Next.js 16デフォルト)
 - **Deploy**: Vercel (予定)
 
 ## 前提条件
 
 - Node.js 24.11.0+ (LTS 'Krypton')
-- npm 11+
+- pnpm
 - Docker & Docker Compose
 - mise (バージョン管理ツール、推奨)
 
@@ -67,7 +67,7 @@ node -v  # v24.11.0
 ### 3. 依存関係のインストール
 
 ```bash
-npm install
+pnpm install
 
 # または mise taskを使用
 mise run setup  # すべてのセットアップを自動実行
@@ -82,7 +82,7 @@ cp .env.local.example .env.local
 ### 4. データベースの起動
 
 ```bash
-npm run docker:up
+pnpm docker:up
 ```
 
 データベースが起動したことを確認：
@@ -96,19 +96,19 @@ docker ps
 データベーススキーマをプッシュ：
 
 ```bash
-npm run db:push
+pnpm db:push
 ```
 
 Prisma Client を生成：
 
 ```bash
-npm run db:generate
+pnpm db:generate
 ```
 
 ### 6. 開発サーバーの起動
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 ブラウザで http://localhost:3000 を開く
@@ -132,38 +132,38 @@ mise run db
 
 ```bash
 # DBをDockerで起動
-npm run docker:up
+pnpm docker:up
 
 # DBを停止
-npm run docker:down
+pnpm docker:down
 
 # Prisma Studio（DBビューア）を起動
-npm run db:studio
+pnpm db:studio
 
 # マイグレーションを作成・適用
-npm run db:migrate
+pnpm db:migrate
 
 # スキーマをDBにプッシュ（開発用）
-npm run db:push
+pnpm db:push
 
 # Prisma Clientを再生成
-npm run db:generate
+pnpm db:generate
 ```
 
 ### 開発
 
 ```bash
 # 開発サーバー起動
-npm run dev
+pnpm dev
 
 # ビルド
-npm run build
+pnpm build
 
 # 本番サーバー起動
-npm start
+pnpm start
 
 # Lint
-npm run lint
+pnpm lint
 ```
 
 ## プロジェクト構造

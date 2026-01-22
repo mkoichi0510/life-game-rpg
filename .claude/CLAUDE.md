@@ -17,6 +17,7 @@
 
 ## 開発時の注意事項
 
+- **パッケージマネージャー**: pnpm を使用（npm は使用しない）
 - **ディレクトリ構成**: `src/` 配下に `app/`, `components/`, `lib/` を配置
 - **スタイリング**: Tailwind CSS 3.x + shadcn/ui を使用
 - **データベース**: PostgreSQL + Prisma ORM
@@ -39,7 +40,7 @@
 ### テスト
 
 - **フレームワーク**: Vitest
-- **実行コマンド**: `npm run test:run`
+- **実行コマンド**: `pnpm test:run`
 - テストファイルは `__tests__/` ディレクトリに配置
 
 ## Phase 1 実装ロードマップ

@@ -87,7 +87,7 @@
 
 **必須:**
 - Node.js 20.9.0以上（20.18.2 LTS推奨）
-- npm 10以上
+- pnpm
 - Docker & Docker Compose
 
 **推奨:**
@@ -151,16 +151,16 @@ Prismaスキーマで定義された主要モデル：
 mise install
 
 # 2. 依存関係のクリーンインストール
-rm -rf node_modules package-lock.json
-npm install
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
 
 # 3. Prisma Clientの再生成
-npm run db:generate
+pnpm db:generate
 
 # 4. middleware.tsがある場合はproxy.tsにリネーム
 mv src/middleware.ts src/proxy.ts
 # エクスポート名も変更: export function middleware → export function proxy
 
 # 5. 開発サーバー起動
-npm run dev
+pnpm dev
 ```

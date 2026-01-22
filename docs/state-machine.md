@@ -228,7 +228,7 @@ function getNextDayKey(dayKey: string): string {
 **依存パッケージ:**
 
 ```bash
-npm install date-fns date-fns-tz
+pnpm add date-fns date-fns-tz
 ```
 
 **採用理由:**

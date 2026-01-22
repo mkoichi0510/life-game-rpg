@@ -5,7 +5,7 @@
 ## 必要な環境
 
 - **Node.js**: 24.11.0以上（**LTS 'Krypton'**）
-- **npm**: 11.x以上（Node.js 24に同梱）
+- **pnpm**: 最新版
 - **Docker**: 最新版
 - **Docker Compose**: 最新版
 - **mise**: 最新版（推奨）
@@ -13,7 +13,7 @@
 バージョン確認：
 ```bash
 node -v   # v24.11.0推奨
-npm -v    # 11.x.x以上
+pnpm -v   # 最新版
 docker -v
 mise -v   # （オプション）
 ```
@@ -78,7 +78,7 @@ mise install
 
 # バージョン確認
 node -v  # v24.11.0
-npm -v   # 11.x.x
+pnpm -v  # 最新版
 ```
 
 ### 方法B: 手動インストール
@@ -103,7 +103,7 @@ mise run setup
 #### 3.1 依存関係のインストール
 
 ```bash
-npm install
+pnpm install
 ```
 
 #### 3.2 環境変数の設定
@@ -119,7 +119,7 @@ cp .env.local.example .env.local
 Dockerを使ってPostgreSQLを起動します：
 
 ```bash
-npm run docker:up
+pnpm docker:up
 ```
 
 **確認方法:**
@@ -135,7 +135,7 @@ docker ps
 ### 5.1 スキーマをデータベースにプッシュ
 
 ```bash
-npm run db:push
+pnpm db:push
 ```
 
 これにより、`prisma/schema.prisma`に定義されたテーブルがPostgreSQLに作成されます。
@@ -143,7 +143,7 @@ npm run db:push
 ### 5.2 Prisma Clientの生成
 
 ```bash
-npm run db:generate
+pnpm db:generate
 ```
 
 これにより、TypeScriptから型安全にDBにアクセスできるようになります。
@@ -151,7 +151,7 @@ npm run db:generate
 ### 5.3 初期データの投入（シード）
 
 ```bash
-npm run db:seed
+pnpm db:seed
 ```
 
 これにより、以下が作成されます：
@@ -168,10 +168,10 @@ npm run db:seed
 mise run dev
 ```
 
-### 方法B: npmスクリプトを使う
+### 方法B: pnpmスクリプトを使う
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 ブラウザで http://localhost:3000 を開いてください。
@@ -189,9 +189,9 @@ Prisma Studioは、データベースの内容を視覚的に確認・編集で�
 mise run db
 ```
 
-**npmスクリプト:**
+**pnpmスクリプト:**
 ```bash
-npm run db:studio
+pnpm db:studio
 ```
 
 ブラウザで http://localhost:5555 が開き、データベースの内容を確認できます。
@@ -205,28 +205,28 @@ npm run db:studio
 docker ps
 
 # コンテナが起動していない場合
-npm run docker:up
+pnpm docker:up
 
 # コンテナを再起動
-npm run docker:down
-npm run docker:up
+pnpm docker:down
+pnpm docker:up
 ```
 
 ### Prismaの型が更新されない
 
 ```bash
 # Prisma Clientを再生成
-npm run db:generate
+pnpm db:generate
 ```
 
 ### スキーマを変更した場合
 
 ```bash
 # 開発環境では db:push を使用
-npm run db:push
+pnpm db:push
 
 # 本番環境では migration を使用
-npm run db:migrate
+pnpm db:migrate
 ```
 
 ## 次のステップ

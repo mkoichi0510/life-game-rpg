@@ -12,17 +12,17 @@ node = "24.11.0"
 [tasks.setup]
 description = "プロジェクトの初期セットアップ"
 run = [
-  "npm install",
-  "npm run docker:up",
-  "npm run db:push",
-  "npm run db:generate",
-  "npm run db:seed"
+  "pnpm install",
+  "pnpm docker:up",
+  "pnpm db:push",
+  "pnpm db:generate",
+  "pnpm db:seed"
 ]
 
 [tasks.dev]
 description = "開発サーバーの起動"
-run = "npm run dev"
+run = "pnpm dev"
 
 [tasks.db]
 description = "Prisma Studioの起動"
-run = "npm run db:studio"
+run = "pnpm db:studio"
