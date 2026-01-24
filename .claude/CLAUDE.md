@@ -90,7 +90,7 @@
 | 2 | #3 | シードデータ作成 | ✅ 完了 |
 | 2 | #5 | Category API | ✅ 完了 |
 | 3 | #6 | Action API | ✅ 完了 |
-| 4 | #7 | PlayLog API | ⬜ |
+| 4 | #7 | PlayLog API | ✅ 完了 |
 | 5 | #8 | DailyResult API | ⬜ |
 | 6 | #9 | 日次確定API | ⬜ |
 | 7 | #10 | PlayerState API | ⬜ |
