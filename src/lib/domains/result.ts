@@ -2,18 +2,18 @@ import { prisma } from '@/lib/prisma'
 import { DAILY_RESULT_STATUS } from '@/lib/constants'
 import { calculateSpFromXp, calculateXpEarned } from '@/lib/calculation'
 import { getRecentDayKeys, getTodayKey } from '@/lib/date'
+import { AlreadyConfirmedError, FutureDateError } from './errors'
 
 type ConfirmOptions = {
   allowAlreadyConfirmed?: boolean
 }
 
-const createAlreadyConfirmedError = () => {
-  const error = new Error('Already confirmed')
-  ;(error as Error & { code: string }).code = 'ALREADY_CONFIRMED'
-  return error
-}
-
 export async function confirmDay(dayKey: string, options?: ConfirmOptions) {
+  const todayKey = getTodayKey()
+  if (dayKey > todayKey) {
+    throw new FutureDateError(dayKey)
+  }
+
   return prisma.$transaction(async (tx) => {
     let dailyResult = await tx.dailyResult.findUnique({
       where: { dayKey },
@@ -31,7 +31,7 @@ export async function confirmDay(dayKey: string, options?: ConfirmOptions) {
       if (options?.allowAlreadyConfirmed) {
         return dailyResult
       }
-      throw createAlreadyConfirmedError()
+      throw new AlreadyConfirmedError(dayKey)
     }
 
     for (const categoryResult of dailyResult.categoryResults) {
@@ -79,7 +79,9 @@ export async function autoConfirmRecentDays(days: number) {
     (dayKey) => dayKey !== todayKey
   )
 
-  for (const dayKey of recentDayKeys) {
-    await confirmDay(dayKey, { allowAlreadyConfirmed: true })
-  }
+  await Promise.all(
+    recentDayKeys.map((dayKey) =>
+      confirmDay(dayKey, { allowAlreadyConfirmed: true })
+    )
+  )
 }

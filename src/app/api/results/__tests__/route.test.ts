@@ -10,8 +10,12 @@ vi.mock('@/lib/prisma', () => ({
   },
 }))
 
-vi.mock('@/lib/domains/result', () => ({
-  autoConfirmRecentDays: vi.fn(),
+vi.mock('@/lib/domains', () => ({
+  confirmDay: vi.fn(),
+}))
+
+vi.mock('@/lib/date', () => ({
+  getTodayKey: vi.fn(() => '2026-01-25'),
 }))
 
 import { prisma } from '@/lib/prisma'

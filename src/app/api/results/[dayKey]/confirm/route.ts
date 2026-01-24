@@ -4,7 +4,11 @@ import {
   formatInternalError,
   formatZodError,
 } from '@/lib/validations/helpers'
-import { confirmDay } from '@/lib/domains/result'
+import {
+  confirmDay,
+  AlreadyConfirmedError,
+  FutureDateError,
+} from '@/lib/domains'
 
 /**
  * POST /api/results/:dayKey/confirm
@@ -26,15 +30,24 @@ export async function POST(
 
     return NextResponse.json({ ok: true })
   } catch (error) {
-    if (
-      error instanceof Error &&
-      (error as Error & { code?: string }).code === 'ALREADY_CONFIRMED'
-    ) {
+    if (error instanceof AlreadyConfirmedError) {
       return NextResponse.json(
         {
           error: {
             code: 'INVALID_OPERATION',
             message: '既に確定済みです',
+          },
+        },
+        { status: 400 }
+      )
+    }
+
+    if (error instanceof FutureDateError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'INVALID_OPERATION',
+            message: '未来の日付は確定できません',
           },
         },
         { status: 400 }
