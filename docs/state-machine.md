@@ -32,6 +32,8 @@ stateDiagram-v2
 | NotExist | Draft | プレイ登録 | なし | DailyResult作成、DailyCategoryResult作成 |
 | Draft | Draft | プレイ追加 | なし | DailyCategoryResult.playCount更新 |
 | Draft | Draft | プレイ削除 | なし | DailyCategoryResult.playCount更新 |
+
+**補足:** DailyResult.status が "confirmed" の日はプレイ削除不可。
 | Draft | Confirmed | 確定操作 | なし | **確定処理フロー実行** |
 
 ---
