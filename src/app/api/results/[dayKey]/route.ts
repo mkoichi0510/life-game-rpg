@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { DAILY_RESULT_STATUS } from '@/lib/constants'
 import { dayKeyParamSchema } from '@/lib/validations/result'
 import { formatInternalError, formatZodError } from '@/lib/validations/helpers'
+import { confirmDay } from '@/lib/domains'
+import { getTodayKey } from '@/lib/date'
 
 /**
  * GET /api/results/:dayKey
@@ -20,8 +22,20 @@ export async function GET(
       return formatZodError(result.error)
     }
 
+    const validatedDayKey = result.data.dayKey
+    const todayKey = getTodayKey()
+
+    // 過去日付の場合のみ遅延確定
+    if (validatedDayKey < todayKey) {
+      try {
+        await confirmDay(validatedDayKey, { allowAlreadyConfirmed: true })
+      } catch (error) {
+        console.error(`Failed to auto-confirm day ${validatedDayKey}:`, error)
+      }
+    }
+
     const dailyResult = await prisma.dailyResult.findUnique({
-      where: { dayKey: result.data.dayKey },
+      where: { dayKey: validatedDayKey },
       select: {
         dayKey: true,
         status: true,
@@ -52,7 +66,7 @@ export async function GET(
     if (!dailyResult) {
       return NextResponse.json({
         dailyResult: {
-          dayKey: result.data.dayKey,
+          dayKey: validatedDayKey,
           status: DAILY_RESULT_STATUS.DRAFT,
           confirmedAt: null,
         },
