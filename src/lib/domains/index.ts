@@ -1,4 +1,4 @@
-export { confirmDay, autoConfirmRecentDays } from './result'
+export { confirmDay, autoConfirmRecentDays } from './confirm'
 export {
   DomainError,
   AlreadyConfirmedError,

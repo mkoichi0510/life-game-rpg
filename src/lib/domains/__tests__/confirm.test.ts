@@ -20,7 +20,7 @@ vi.mock('@/lib/date', () => ({
 }))
 
 import { prisma } from '@/lib/prisma'
-import { confirmDay, autoConfirmRecentDays } from '../result'
+import { confirmDay, autoConfirmRecentDays } from '../confirm'
 
 describe('confirmDay', () => {
   beforeEach(() => {
