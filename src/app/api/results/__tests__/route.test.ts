@@ -32,6 +32,43 @@ describe('GET /api/results/:dayKey', () => {
     expect(data.error.details.field).toBe('dayKey')
   })
 
+  it('should return 400 for invalid date format', async () => {
+    const request = createGetRequest('invalid-date')
+    const response = await GET(request, {
+      params: Promise.resolve({ dayKey: 'invalid-date' }),
+    })
+    const data = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(data.error.code).toBe('VALIDATION_ERROR')
+    expect(data.error.details.field).toBe('dayKey')
+  })
+
+  it('should return 400 for non-existent date (Feb 30)', async () => {
+    const request = createGetRequest('2026-02-30')
+    const response = await GET(request, {
+      params: Promise.resolve({ dayKey: '2026-02-30' }),
+    })
+    const data = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(data.error.code).toBe('VALIDATION_ERROR')
+    expect(data.error.details.field).toBe('dayKey')
+    expect(data.error.details.reason).toBe('有効な日付を指定してください')
+  })
+
+  it('should return 400 for invalid month (month 13)', async () => {
+    const request = createGetRequest('2026-13-01')
+    const response = await GET(request, {
+      params: Promise.resolve({ dayKey: '2026-13-01' }),
+    })
+    const data = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(data.error.code).toBe('VALIDATION_ERROR')
+    expect(data.error.details.field).toBe('dayKey')
+  })
+
   it('should return empty result when DailyResult does not exist', async () => {
     vi.mocked(prisma.dailyResult.findUnique).mockResolvedValue(null)
 
