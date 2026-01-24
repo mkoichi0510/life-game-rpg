@@ -14,10 +14,11 @@ import {
  */
 export async function DELETE(
   _request: Request,
-  { params }: { params: { id?: string } }
+  { params }: { params: Promise<{ id?: string }> }
 ) {
   try {
-    const result = playIdParamSchema.safeParse({ id: params.id ?? '' })
+    const { id } = await params
+    const result = playIdParamSchema.safeParse({ id: id ?? '' })
 
     if (!result.success) {
       return formatZodError(result.error)
