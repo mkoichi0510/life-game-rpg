@@ -10,6 +10,10 @@ vi.mock('@/lib/prisma', () => ({
   },
 }))
 
+vi.mock('@/lib/domains/result', () => ({
+  autoConfirmRecentDays: vi.fn(),
+}))
+
 import { prisma } from '@/lib/prisma'
 
 const createGetRequest = (dayKey: string) =>

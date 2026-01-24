@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { DAILY_RESULT_STATUS } from '@/lib/constants'
 import { dayKeyParamSchema } from '@/lib/validations/result'
 import { formatInternalError, formatZodError } from '@/lib/validations/helpers'
+import { autoConfirmRecentDays } from '@/lib/domains/result'
 
 /**
  * GET /api/results/:dayKey
@@ -19,6 +20,8 @@ export async function GET(
     if (!result.success) {
       return formatZodError(result.error)
     }
+
+    await autoConfirmRecentDays(7)
 
     const dailyResult = await prisma.dailyResult.findUnique({
       where: { dayKey: result.data.dayKey },

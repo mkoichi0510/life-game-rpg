@@ -92,7 +92,7 @@
 | 3 | #6 | Action API | ✅ 完了 |
 | 4 | #7 | PlayLog API | ✅ 完了 |
 | 5 | #8 | DailyResult API | ⬜ |
-| 6 | #9 | 日次確定API | ⬜ |
+| 6 | #9 | 日次確定API | ✅ 完了 |
 | 7 | #10 | PlayerState API | ⬜ |
 | 9 | #17 | ホーム画面 | ⬜ |
 | 11-12 | #21,#22 | 統合・E2E | ⬜ |
