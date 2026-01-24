@@ -6,6 +6,7 @@ import {
   formatNotFoundError,
   formatInternalError,
 } from '@/lib/validations/helpers'
+import { mapNodeWithUnlockStatus } from '@/lib/mappers/skillNode'
 
 /**
  * GET /api/skills/trees/:id
@@ -44,17 +45,7 @@ export async function GET(
     }
 
     // ノードに解放状態を追加
-    const nodesWithUnlockStatus = tree.skillNodes.map((node) => ({
-      id: node.id,
-      treeId: node.treeId,
-      order: node.order,
-      title: node.title,
-      costSp: node.costSp,
-      createdAt: node.createdAt,
-      updatedAt: node.updatedAt,
-      isUnlocked: node.unlockedNodes.length > 0,
-      unlockedAt: node.unlockedNodes[0]?.unlockedAt ?? null,
-    }))
+    const nodesWithUnlockStatus = tree.skillNodes.map(mapNodeWithUnlockStatus)
 
     return NextResponse.json({
       tree: {

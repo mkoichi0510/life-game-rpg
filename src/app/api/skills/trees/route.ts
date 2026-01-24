@@ -12,6 +12,7 @@ import {
  * スキルツリー一覧を取得
  * クエリパラメータ:
  *   - categoryId: カテゴリID（必須）
+ *   - visible: trueの場合、表示中のツリーのみ取得
  */
 export async function GET(request: NextRequest) {
   try {
@@ -31,8 +32,12 @@ export async function GET(request: NextRequest) {
       return formatNotFoundError('カテゴリ', result.data.categoryId)
     }
 
+    const visibleOnly = searchParams.get('visible') === 'true'
     const trees = await prisma.skillTree.findMany({
-      where: { categoryId: result.data.categoryId },
+      where: {
+        categoryId: result.data.categoryId,
+        ...(visibleOnly && { visible: true }),
+      },
       orderBy: [{ order: 'asc' }, { id: 'asc' }],
       select: {
         id: true,

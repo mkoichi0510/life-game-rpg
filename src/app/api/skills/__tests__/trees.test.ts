@@ -123,11 +123,122 @@ describe('GET /api/skills/trees', () => {
     expect(response.status).toBe(500)
     expect(data.error.code).toBe('INTERNAL_ERROR')
   })
+
+  it('should filter trees by visible when visible=true', async () => {
+    const mockCategory = { id: 'cat-1', name: '健康' }
+    const mockTrees = [
+      {
+        id: 'tree-1',
+        categoryId: 'cat-1',
+        name: '筋トレ',
+        visible: true,
+        order: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]
+
+    vi.mocked(prisma.category.findUnique).mockResolvedValue(mockCategory as any)
+    vi.mocked(prisma.skillTree.findMany).mockResolvedValue(mockTrees)
+
+    const request = createRequest(
+      '/api/skills/trees?categoryId=cat-1&visible=true'
+    )
+    const response = await GET(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.trees).toHaveLength(1)
+    expect(prisma.skillTree.findMany).toHaveBeenCalledWith({
+      where: { categoryId: 'cat-1', visible: true },
+      orderBy: [{ order: 'asc' }, { id: 'asc' }],
+      select: {
+        id: true,
+        categoryId: true,
+        name: true,
+        visible: true,
+        order: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    })
+  })
+
+  it('should return all trees when visible is not specified', async () => {
+    const mockCategory = { id: 'cat-1', name: '健康' }
+    const mockTrees = [
+      {
+        id: 'tree-1',
+        categoryId: 'cat-1',
+        name: '筋トレ',
+        visible: true,
+        order: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 'tree-2',
+        categoryId: 'cat-1',
+        name: '非表示ツリー',
+        visible: false,
+        order: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]
+
+    vi.mocked(prisma.category.findUnique).mockResolvedValue(mockCategory as any)
+    vi.mocked(prisma.skillTree.findMany).mockResolvedValue(mockTrees)
+
+    const request = createRequest('/api/skills/trees?categoryId=cat-1')
+    const response = await GET(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.trees).toHaveLength(2)
+    expect(prisma.skillTree.findMany).toHaveBeenCalledWith({
+      where: { categoryId: 'cat-1' },
+      orderBy: [{ order: 'asc' }, { id: 'asc' }],
+      select: {
+        id: true,
+        categoryId: true,
+        name: true,
+        visible: true,
+        order: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    })
+  })
 })
 
 describe('GET /api/skills/trees/:id', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  it('should return VALIDATION_ERROR when id is empty', async () => {
+    const request = createRequest('/api/skills/trees/')
+    const response = await GET_DETAIL(request, {
+      params: Promise.resolve({ id: '' }),
+    })
+    const data = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(data.error.code).toBe('VALIDATION_ERROR')
+    expect(data.error.details.field).toBe('id')
+  })
+
+  it('should return VALIDATION_ERROR when id is whitespace only', async () => {
+    const request = createRequest('/api/skills/trees/   ')
+    const response = await GET_DETAIL(request, {
+      params: Promise.resolve({ id: '   ' }),
+    })
+    const data = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(data.error.code).toBe('VALIDATION_ERROR')
+    expect(data.error.details.field).toBe('id')
   })
 
   it('should return NOT_FOUND when tree does not exist', async () => {
