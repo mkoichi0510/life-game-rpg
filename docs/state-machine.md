@@ -34,6 +34,8 @@ stateDiagram-v2
 | Draft | Draft | プレイ削除 | なし | DailyCategoryResult.playCount更新 |
 | Draft | Confirmed | 確定操作 | なし | **確定処理フロー実行** |
 
+> **補足:** DailyResult.status が "confirmed" の日はプレイ削除不可。
+
 ---
 
 ## 2. 日次確定処理フロー
