@@ -90,6 +90,44 @@ describe('GET /api/plays', () => {
       include: expect.any(Object),
     })
   })
+
+  it('should filter play logs by categoryId', async () => {
+    const mockPlayLogs = [
+      {
+        id: 'play-1',
+        dayKey: '2026-01-24',
+        at: new Date('2026-01-24T01:00:00Z'),
+        actionId: 'action-1',
+        note: null,
+        createdAt: new Date(),
+        action: {
+          id: 'action-1',
+          label: 'テスト',
+          categoryId: 'cat-1',
+          category: { id: 'cat-1', name: 'カテゴリ' },
+        },
+      },
+    ]
+
+    vi.mocked(prisma.playLog.findMany).mockResolvedValue(mockPlayLogs)
+
+    const request = createGetRequest(
+      'http://localhost:3000/api/plays?dayKey=2026-01-24&categoryId=cat-1'
+    )
+    const response = await GET(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.playLogs).toHaveLength(1)
+    expect(prisma.playLog.findMany).toHaveBeenCalledWith({
+      where: {
+        dayKey: '2026-01-24',
+        action: { categoryId: 'cat-1' },
+      },
+      orderBy: [{ at: 'asc' }, { id: 'asc' }],
+      include: expect.any(Object),
+    })
+  })
 })
 
 describe('POST /api/plays', () => {

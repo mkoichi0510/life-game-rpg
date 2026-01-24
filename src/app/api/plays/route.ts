@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const query = {
       dayKey: searchParams.get('dayKey') ?? '',
+      categoryId: searchParams.get('categoryId') ?? undefined,
     }
     const result = getPlaysQuerySchema.safeParse(query)
 
@@ -44,7 +45,12 @@ export async function GET(request: NextRequest) {
     }
 
     const playLogs = await prisma.playLog.findMany({
-      where: { dayKey: result.data.dayKey },
+      where: {
+        dayKey: result.data.dayKey,
+        ...(result.data.categoryId && {
+          action: { categoryId: result.data.categoryId },
+        }),
+      },
       orderBy: [{ at: 'asc' }, { id: 'asc' }],
       include: playLogInclude,
     })

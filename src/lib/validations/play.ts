@@ -7,7 +7,8 @@ export const getPlaysQuerySchema = z.object({
     .string({ required_error: '日付は必須です' })
     .trim()
     .min(1, '日付は必須です')
-    .regex(dayKeyRegex, '日付はYYYY-MM-DD形式で指定してください')
+    .regex(dayKeyRegex, '日付はYYYY-MM-DD形式で指定してください'),
+  categoryId: z.string().trim().optional(),
 })
 
 export const createPlaySchema = z.object({
