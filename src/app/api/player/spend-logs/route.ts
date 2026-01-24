@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getSpendLogsQuerySchema } from '@/lib/validations/player'
+import { categoryIdParamSchema } from '@/lib/validations/player'
 import {
   formatInternalError,
   formatNotFoundError,
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const query = {
       categoryId: searchParams.get('categoryId') ?? '',
     }
-    const result = getSpendLogsQuerySchema.safeParse(query)
+    const result = categoryIdParamSchema.safeParse(query)
 
     if (!result.success) {
       return formatZodError(result.error)
