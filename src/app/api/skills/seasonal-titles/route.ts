@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { seasonalTitlesQuerySchema } from '@/lib/validations/seasonalTitle'
+import { seasonalTitlesQuerySchema } from '@/lib/validations/skill'
 import {
   formatZodError,
   formatNotFoundError,

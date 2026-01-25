@@ -181,6 +181,8 @@ describe('GET /api/skills/seasonal-titles/current', () => {
 
   it('should return current title based on recent SP earned', async () => {
     const mockCategory = { id: 'cat-1', name: '健康', rankWindowDays: 7 }
+    const silverCreatedAt = new Date('2024-01-01T00:00:00Z')
+    const silverUpdatedAt = new Date('2024-01-01T00:00:00Z')
     // Ordered by minSpEarned desc as the API does
     const mockTitles = [
       {
@@ -189,6 +191,8 @@ describe('GET /api/skills/seasonal-titles/current', () => {
         label: 'ゴールド',
         minSpEarned: 10,
         order: 2,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       {
         id: 'title-2',
@@ -196,6 +200,8 @@ describe('GET /api/skills/seasonal-titles/current', () => {
         label: 'シルバー',
         minSpEarned: 5,
         order: 1,
+        createdAt: silverCreatedAt,
+        updatedAt: silverUpdatedAt,
       },
       {
         id: 'title-1',
@@ -203,6 +209,8 @@ describe('GET /api/skills/seasonal-titles/current', () => {
         label: 'ブロンズ',
         minSpEarned: 1,
         order: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     ]
     const mockCategoryResults = [
@@ -231,6 +239,8 @@ describe('GET /api/skills/seasonal-titles/current', () => {
     expect(response.status).toBe(200)
     expect(data.totalSpEarned).toBe(7)
     expect(data.currentTitle.label).toBe('シルバー')
+    expect(data.currentTitle.createdAt).toBe(silverCreatedAt.toISOString())
+    expect(data.currentTitle.updatedAt).toBe(silverUpdatedAt.toISOString())
     expect(data.rankWindowDays).toBe(7)
   })
 
