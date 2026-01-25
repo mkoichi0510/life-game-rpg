@@ -3,9 +3,9 @@ import { prisma } from '@/lib/prisma'
 import { createActionSchema, getActionsQuerySchema } from '@/lib/validations/action'
 import {
   formatZodError,
-  formatNotFoundError,
   formatInternalError,
 } from '@/lib/validations/helpers'
+import { requireCategory, isCategoryFailure } from '@/lib/api/requireCategory'
 
 /**
  * GET /api/actions
@@ -27,13 +27,9 @@ export async function GET(request: NextRequest) {
       return formatZodError(result.error)
     }
 
-    const category = await prisma.category.findUnique({
-      where: { id: result.data.categoryId },
-      select: { id: true },
-    })
-
-    if (!category) {
-      return formatNotFoundError('カテゴリ', result.data.categoryId)
+    const categoryResult = await requireCategory(result.data.categoryId)
+    if (isCategoryFailure(categoryResult)) {
+      return categoryResult.response
     }
 
     const actions = await prisma.action.findMany({
@@ -64,13 +60,9 @@ export async function POST(request: NextRequest) {
       return formatZodError(result.error)
     }
 
-    const category = await prisma.category.findUnique({
-      where: { id: result.data.categoryId },
-      select: { id: true },
-    })
-
-    if (!category) {
-      return formatNotFoundError('カテゴリ', result.data.categoryId)
+    const categoryResult = await requireCategory(result.data.categoryId)
+    if (isCategoryFailure(categoryResult)) {
+      return categoryResult.response
     }
 
     const action = await prisma.action.create({

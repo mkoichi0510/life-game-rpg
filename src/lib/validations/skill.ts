@@ -1,10 +1,5 @@
 import { z } from 'zod'
-
-const requiredId = (label: string) =>
-  z
-    .string({ required_error: `${label}は必須です` })
-    .trim()
-    .min(1, `${label}は必須です`)
+import { requiredId } from '@/lib/validations/common'
 
 export const skillTreesQuerySchema = z.object({
   categoryId: requiredId('カテゴリID'),
@@ -12,6 +7,10 @@ export const skillTreesQuerySchema = z.object({
 
 export const skillTreeIdParamSchema = z.object({
   id: requiredId('ツリーID'),
+})
+
+export const skillNodeIdParamSchema = z.object({
+  id: requiredId('ノードID'),
 })
 
 export const skillNodesQuerySchema = z.object({
@@ -24,5 +23,6 @@ export const seasonalTitlesQuerySchema = z.object({
 
 export type SkillTreesQueryInput = z.infer<typeof skillTreesQuerySchema>
 export type SkillTreeIdParamInput = z.infer<typeof skillTreeIdParamSchema>
+export type SkillNodeIdParamInput = z.infer<typeof skillNodeIdParamSchema>
 export type SkillNodesQueryInput = z.infer<typeof skillNodesQuerySchema>
 export type SeasonalTitlesQueryInput = z.infer<typeof seasonalTitlesQuerySchema>

@@ -3,6 +3,11 @@ import {
   DomainError,
   AlreadyConfirmedError,
   FutureDateError,
+  SkillNodeNotFoundError,
+  PlayerStateNotFoundError,
+  AlreadyUnlockedError,
+  InsufficientSpError,
+  PrerequisiteNotMetError,
   isDomainError,
 } from '../errors'
 
@@ -60,6 +65,31 @@ describe('isDomainError', () => {
 
   it('should return true for FutureDateError', () => {
     const error = new FutureDateError('2030-01-01')
+    expect(isDomainError(error)).toBe(true)
+  })
+
+  it('should return true for SkillNodeNotFoundError', () => {
+    const error = new SkillNodeNotFoundError('node-1')
+    expect(isDomainError(error)).toBe(true)
+  })
+
+  it('should return true for PlayerStateNotFoundError', () => {
+    const error = new PlayerStateNotFoundError('cat-1')
+    expect(isDomainError(error)).toBe(true)
+  })
+
+  it('should return true for AlreadyUnlockedError', () => {
+    const error = new AlreadyUnlockedError('node-1')
+    expect(isDomainError(error)).toBe(true)
+  })
+
+  it('should return true for InsufficientSpError', () => {
+    const error = new InsufficientSpError(5, 2, 'node-1')
+    expect(isDomainError(error)).toBe(true)
+  })
+
+  it('should return true for PrerequisiteNotMetError', () => {
+    const error = new PrerequisiteNotMetError('node-2', 'node-1')
     expect(isDomainError(error)).toBe(true)
   })
 

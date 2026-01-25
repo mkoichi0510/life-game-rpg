@@ -3,9 +3,9 @@ import { prisma } from '@/lib/prisma'
 import { categoryIdParamSchema } from '@/lib/validations/player'
 import {
   formatInternalError,
-  formatNotFoundError,
   formatZodError,
 } from '@/lib/validations/helpers'
+import { requireCategory, isCategoryFailure } from '@/lib/api/requireCategory'
 
 /**
  * GET /api/player/spend-logs
@@ -25,13 +25,9 @@ export async function GET(request: NextRequest) {
       return formatZodError(result.error)
     }
 
-    const category = await prisma.category.findUnique({
-      where: { id: result.data.categoryId },
-      select: { id: true },
-    })
-
-    if (!category) {
-      return formatNotFoundError('カテゴリ', result.data.categoryId)
+    const categoryResult = await requireCategory(result.data.categoryId)
+    if (isCategoryFailure(categoryResult)) {
+      return categoryResult.response
     }
 
     const spendLogs = await prisma.spendLog.findMany({
