@@ -6,7 +6,7 @@ import {
   formatInternalError,
 } from '@/lib/validations/helpers'
 import { getRecentDayKeys } from '@/lib/date'
-import { requireCategory } from '@/lib/api/requireCategory'
+import { requireCategory, isCategoryFailure } from '@/lib/api/requireCategory'
 
 /**
  * GET /api/skills/seasonal-titles/current
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       id: true,
       rankWindowDays: true,
     })
-    if (!categoryResult.ok) {
+    if (isCategoryFailure(categoryResult)) {
       return categoryResult.response
     }
     const category = categoryResult.category

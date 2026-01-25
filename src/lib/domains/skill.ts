@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { SPEND_LOG_TYPE } from '@/lib/constants'
 import {
   AlreadyUnlockedError,
   InsufficientSpError,
@@ -73,7 +74,7 @@ export async function unlockNode(nodeId: string): Promise<UnlockNodeResult> {
     await tx.spendLog.create({
       data: {
         categoryId: node.tree.categoryId,
-        type: 'unlock_node',
+        type: SPEND_LOG_TYPE.UNLOCK_NODE,
         costSp: node.costSp,
         refId: nodeId,
       },

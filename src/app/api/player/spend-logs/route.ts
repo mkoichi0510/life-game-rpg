@@ -5,7 +5,7 @@ import {
   formatInternalError,
   formatZodError,
 } from '@/lib/validations/helpers'
-import { requireCategory } from '@/lib/api/requireCategory'
+import { requireCategory, isCategoryFailure } from '@/lib/api/requireCategory'
 
 /**
  * GET /api/player/spend-logs
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     }
 
     const categoryResult = await requireCategory(result.data.categoryId)
-    if (!categoryResult.ok) {
+    if (isCategoryFailure(categoryResult)) {
       return categoryResult.response
     }
 

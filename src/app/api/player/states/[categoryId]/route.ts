@@ -4,7 +4,7 @@ import {
   formatInternalError,
   formatZodError,
 } from '@/lib/validations/helpers'
-import { requireCategory } from '@/lib/api/requireCategory'
+import { requireCategory, isCategoryFailure } from '@/lib/api/requireCategory'
 
 /**
  * GET /api/player/states/:categoryId
@@ -39,9 +39,10 @@ export async function GET(
         },
       },
     })
-    if (!categoryResult.ok) {
+    if (isCategoryFailure(categoryResult)) {
       return categoryResult.response
     }
+
     const category = categoryResult.category
 
     return NextResponse.json({

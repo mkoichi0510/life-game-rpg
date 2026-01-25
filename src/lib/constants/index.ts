@@ -65,6 +65,16 @@ export type SkillNodeState =
   (typeof SKILL_NODE_STATE)[keyof typeof SKILL_NODE_STATE];
 
 /**
+ * SpendLog タイプ定数
+ */
+export const SPEND_LOG_TYPE = {
+  UNLOCK_NODE: 'unlock_node',
+} as const;
+
+export type SpendLogType =
+  (typeof SPEND_LOG_TYPE)[keyof typeof SPEND_LOG_TYPE];
+
+/**
  * デフォルト値
  */
 export const DEFAULTS = {

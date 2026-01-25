@@ -5,7 +5,7 @@ import {
   formatZodError,
   formatInternalError,
 } from '@/lib/validations/helpers'
-import { requireCategory } from '@/lib/api/requireCategory'
+import { requireCategory, isCategoryFailure } from '@/lib/api/requireCategory'
 
 /**
  * GET /api/actions
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     }
 
     const categoryResult = await requireCategory(result.data.categoryId)
-    if (!categoryResult.ok) {
+    if (isCategoryFailure(categoryResult)) {
       return categoryResult.response
     }
 
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     const categoryResult = await requireCategory(result.data.categoryId)
-    if (!categoryResult.ok) {
+    if (isCategoryFailure(categoryResult)) {
       return categoryResult.response
     }
 

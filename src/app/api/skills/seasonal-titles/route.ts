@@ -5,7 +5,7 @@ import {
   formatZodError,
   formatInternalError,
 } from '@/lib/validations/helpers'
-import { requireCategory } from '@/lib/api/requireCategory'
+import { requireCategory, isCategoryFailure } from '@/lib/api/requireCategory'
 
 /**
  * GET /api/skills/seasonal-titles
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     // カテゴリ存在確認
     const categoryResult = await requireCategory(result.data.categoryId)
-    if (!categoryResult.ok) {
+    if (isCategoryFailure(categoryResult)) {
       return categoryResult.response
     }
 
