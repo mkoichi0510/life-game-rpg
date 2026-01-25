@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma'
 import { seasonalTitlesQuerySchema } from '@/lib/validations/skill'
 import {
   formatZodError,
-  formatNotFoundError,
   formatInternalError,
 } from '@/lib/validations/helpers'
 import { getRecentDayKeys } from '@/lib/date'
+import { requireCategory } from '@/lib/api/requireCategory'
 
 /**
  * GET /api/skills/seasonal-titles/current
@@ -25,12 +25,14 @@ export async function GET(request: NextRequest) {
     }
 
     // カテゴリ存在確認（rankWindowDaysも取得）
-    const category = await prisma.category.findUnique({
-      where: { id: result.data.categoryId },
+    const categoryResult = await requireCategory(result.data.categoryId, {
+      id: true,
+      rankWindowDays: true,
     })
-    if (!category) {
-      return formatNotFoundError('カテゴリ', result.data.categoryId)
+    if (!categoryResult.ok) {
+      return categoryResult.response
     }
+    const category = categoryResult.category
 
     // 直近N日のdayKeyを取得
     const recentDayKeys = getRecentDayKeys(category.rankWindowDays)

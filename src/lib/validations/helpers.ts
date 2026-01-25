@@ -42,3 +42,49 @@ export function formatInternalError(message: string) {
     { status: 500 }
   )
 }
+
+export function formatAlreadyUnlockedError(nodeId: string) {
+  return NextResponse.json(
+    {
+      error: {
+        code: 'ALREADY_UNLOCKED',
+        message: '既に解放済みです',
+        details: { nodeId },
+      },
+    },
+    { status: 400 }
+  )
+}
+
+export function formatInsufficientSpError(
+  required: number,
+  available: number,
+  nodeId: string
+) {
+  return NextResponse.json(
+    {
+      error: {
+        code: 'INSUFFICIENT_SP',
+        message: 'SPが不足しています',
+        details: { required, available, nodeId },
+      },
+    },
+    { status: 400 }
+  )
+}
+
+export function formatPrerequisiteNotMetError(
+  nodeId: string,
+  prerequisiteNodeId?: string
+) {
+  return NextResponse.json(
+    {
+      error: {
+        code: 'PREREQUISITE_NOT_MET',
+        message: '前提条件が未達です',
+        details: { nodeId, prerequisiteNodeId },
+      },
+    },
+    { status: 400 }
+  )
+}

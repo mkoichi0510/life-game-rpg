@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { categoryIdParamSchema } from '@/lib/validations/player'
 import {
   formatInternalError,
-  formatNotFoundError,
   formatZodError,
 } from '@/lib/validations/helpers'
+import { requireCategory } from '@/lib/api/requireCategory'
 
 /**
  * GET /api/player/states/:categoryId
@@ -25,28 +24,25 @@ export async function GET(
       return formatZodError(result.error)
     }
 
-    const category = await prisma.category.findUnique({
-      where: { id: result.data.categoryId },
-      select: {
-        id: true,
-        name: true,
-        order: true,
-        playerState: {
-          select: {
-            id: true,
-            categoryId: true,
-            xpTotal: true,
-            spUnspent: true,
-            createdAt: true,
-            updatedAt: true,
-          },
+    const categoryResult = await requireCategory(result.data.categoryId, {
+      id: true,
+      name: true,
+      order: true,
+      playerState: {
+        select: {
+          id: true,
+          categoryId: true,
+          xpTotal: true,
+          spUnspent: true,
+          createdAt: true,
+          updatedAt: true,
         },
       },
     })
-
-    if (!category) {
-      return formatNotFoundError('カテゴリ', result.data.categoryId)
+    if (!categoryResult.ok) {
+      return categoryResult.response
     }
+    const category = categoryResult.category
 
     return NextResponse.json({
       category: {
