@@ -1,0 +1,23 @@
+import { z } from 'zod'
+
+const requiredId = (label: string) =>
+  z
+    .string({ required_error: `${label}は必須です` })
+    .trim()
+    .min(1, `${label}は必須です`)
+
+export const skillTreesQuerySchema = z.object({
+  categoryId: requiredId('カテゴリID'),
+})
+
+export const skillTreeIdParamSchema = z.object({
+  id: requiredId('ツリーID'),
+})
+
+export const skillNodesQuerySchema = z.object({
+  treeId: requiredId('ツリーID'),
+})
+
+export type SkillTreesQueryInput = z.infer<typeof skillTreesQuerySchema>
+export type SkillTreeIdParamInput = z.infer<typeof skillTreeIdParamSchema>
+export type SkillNodesQueryInput = z.infer<typeof skillNodesQuerySchema>
