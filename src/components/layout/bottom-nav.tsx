@@ -3,29 +3,38 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ClipboardList, Home, PlusCircle, Sparkles } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { exactMatch, prefixMatch } from "./nav-utils";
 
-const navItems = [
-  { href: "/", label: "ホーム", Icon: Home, match: (path: string) => path === "/" },
+interface NavItem {
+  href: string;
+  label: string;
+  Icon: LucideIcon;
+  match: (path: string) => boolean;
+}
+
+const navItems: readonly NavItem[] = [
+  { href: "/", label: "ホーム", Icon: Home, match: (path) => exactMatch(path, "/") },
   {
     href: "/play",
     label: "プレイ",
     Icon: PlusCircle,
-    match: (path: string) => path.startsWith("/play"),
+    match: (path) => prefixMatch(path, "/play"),
   },
   {
     href: "/result",
     label: "リザルト",
     Icon: ClipboardList,
-    match: (path: string) => path.startsWith("/result"),
+    match: (path) => prefixMatch(path, "/result"),
   },
   {
     href: "/skills",
     label: "スキル",
     Icon: Sparkles,
-    match: (path: string) => path.startsWith("/skills"),
+    match: (path) => prefixMatch(path, "/skills"),
   },
-] as const;
+];
 
 export function BottomNav() {
   const pathname = usePathname();
