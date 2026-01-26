@@ -10,6 +10,9 @@ vi.mock('@/lib/prisma', () => ({
     spendLog: {
       findMany: vi.fn(),
     },
+    skillNode: {
+      findMany: vi.fn(),
+    },
   },
 }))
 
@@ -27,14 +30,16 @@ describe('GET /api/player/spend-logs', () => {
     vi.clearAllMocks()
   })
 
-  it('should return 400 when categoryId is missing', async () => {
+  it('should return spend logs without categoryId', async () => {
+    vi.mocked(prisma.spendLog.findMany).mockResolvedValue([])
+
     const request = createGetRequest()
     const response = await GET(request)
     const data = await response.json()
 
-    expect(response.status).toBe(400)
-    expect(data.error.code).toBe('VALIDATION_ERROR')
-    expect(data.error.details.field).toBe('categoryId')
+    expect(response.status).toBe(200)
+    expect(data.logs).toHaveLength(0)
+    expect(data.nextCursor).toBeNull()
   })
 
   it('should return 404 when category does not exist', async () => {
@@ -52,28 +57,45 @@ describe('GET /api/player/spend-logs', () => {
     const mockLogs = [
       {
         id: 'log-2',
-        at: new Date(),
+        at: new Date('2024-01-15T10:00:00.000Z'),
         categoryId: 'cat-1',
         type: 'unlock_node',
         costSp: 3,
         refId: 'node-2',
         dayKey: null,
-        createdAt: new Date(),
+        createdAt: new Date('2024-01-15T10:00:00.000Z'),
       },
     ]
 
     vi.mocked(prisma.category.findUnique).mockResolvedValue({ id: 'cat-1' })
     vi.mocked(prisma.spendLog.findMany).mockResolvedValue(mockLogs)
+    vi.mocked(prisma.skillNode.findMany).mockResolvedValue([
+      {
+        id: 'node-2',
+        title: '速読術',
+        costSp: 3,
+        treeId: 'tree-1',
+        order: 2,
+      },
+    ])
 
     const request = createGetRequest('cat-1')
     const response = await GET(request)
     const data = await response.json()
 
     expect(response.status).toBe(200)
-    expect(data.spendLogs).toHaveLength(1)
+    expect(data.logs).toHaveLength(1)
+    expect(data.logs[0].skillNode).toEqual({
+      id: 'node-2',
+      title: '速読術',
+      costSp: 3,
+      treeId: 'tree-1',
+      order: 2,
+    })
     expect(prisma.spendLog.findMany).toHaveBeenCalledWith({
       where: { categoryId: 'cat-1' },
       orderBy: [{ at: 'desc' }, { id: 'desc' }],
+      take: 21,
       select: {
         id: true,
         at: true,
@@ -85,6 +107,75 @@ describe('GET /api/player/spend-logs', () => {
         createdAt: true,
       },
     })
+  })
+
+  it('should return validation error for invalid limit', async () => {
+    const request = new NextRequest(
+      'http://localhost:3000/api/player/spend-logs?limit=0'
+    )
+    const response = await GET(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(data.error.code).toBe('VALIDATION_ERROR')
+    expect(data.error.details.field).toBe('limit')
+  })
+
+  it('should return validation error for invalid cursor', async () => {
+    const request = new NextRequest(
+      'http://localhost:3000/api/player/spend-logs?cursor=invalid'
+    )
+    const response = await GET(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(data.error.code).toBe('VALIDATION_ERROR')
+    expect(data.error.details.field).toBe('cursor')
+  })
+
+  it('should return nextCursor when more results exist', async () => {
+    const firstLog = {
+      id: 'log-2',
+      at: new Date('2024-01-15T10:00:00.000Z'),
+      categoryId: 'cat-1',
+      type: 'unlock_node',
+      costSp: 3,
+      refId: 'node-2',
+      dayKey: null,
+      createdAt: new Date('2024-01-15T10:00:00.000Z'),
+    }
+    const secondLog = {
+      id: 'log-1',
+      at: new Date('2024-01-15T09:00:00.000Z'),
+      categoryId: 'cat-1',
+      type: 'unlock_node',
+      costSp: 2,
+      refId: 'node-1',
+      dayKey: null,
+      createdAt: new Date('2024-01-15T09:00:00.000Z'),
+    }
+
+    vi.mocked(prisma.category.findUnique).mockResolvedValue({ id: 'cat-1' })
+    vi.mocked(prisma.spendLog.findMany).mockResolvedValue([firstLog, secondLog])
+    vi.mocked(prisma.skillNode.findMany).mockResolvedValue([
+      {
+        id: 'node-2',
+        title: '速読術',
+        costSp: 3,
+        treeId: 'tree-1',
+        order: 2,
+      },
+    ])
+
+    const request = new NextRequest(
+      'http://localhost:3000/api/player/spend-logs?categoryId=cat-1&limit=1'
+    )
+    const response = await GET(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.logs).toHaveLength(1)
+    expect(data.nextCursor).toBe('2024-01-15T10:00:00.000Z__log-2')
   })
 
   it('should return 500 on database error', async () => {

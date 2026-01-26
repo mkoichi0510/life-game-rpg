@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { categoryIdParamSchema } from '@/lib/validations/player'
+import { spendLogsQuerySchema } from '@/lib/validations/player'
 import {
   formatInternalError,
   formatZodError,
 } from '@/lib/validations/helpers'
 import { requireCategory, isCategoryFailure } from '@/lib/api/requireCategory'
+import { SPEND_LOG_TYPE } from '@/lib/constants'
 
 /**
  * GET /api/player/spend-logs
@@ -17,22 +18,46 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const query = {
-      categoryId: searchParams.get('categoryId') ?? '',
+      categoryId: searchParams.get('categoryId') ?? undefined,
+      limit: searchParams.get('limit') ?? undefined,
+      cursor: searchParams.get('cursor') ?? undefined,
     }
-    const result = categoryIdParamSchema.safeParse(query)
+    const result = spendLogsQuerySchema.safeParse(query)
 
     if (!result.success) {
       return formatZodError(result.error)
     }
 
-    const categoryResult = await requireCategory(result.data.categoryId)
-    if (isCategoryFailure(categoryResult)) {
-      return categoryResult.response
+    if (result.data.categoryId) {
+      const categoryResult = await requireCategory(result.data.categoryId)
+      if (isCategoryFailure(categoryResult)) {
+        return categoryResult.response
+      }
+    }
+
+    let cursorAt: Date | null = null
+    let cursorId: string | null = null
+    if (result.data.cursor) {
+      const [atPart, ...idParts] = result.data.cursor.split('__')
+      cursorAt = new Date(atPart)
+      cursorId = idParts.join('__')
+    }
+
+    const where = {
+      ...(result.data.categoryId && { categoryId: result.data.categoryId }),
+      ...(cursorAt &&
+        cursorId && {
+          OR: [
+            { at: { lt: cursorAt } },
+            { AND: [{ at: cursorAt }, { id: { lt: cursorId } }] },
+          ],
+        }),
     }
 
     const spendLogs = await prisma.spendLog.findMany({
-      where: { categoryId: result.data.categoryId },
+      where,
       orderBy: [{ at: 'desc' }, { id: 'desc' }],
+      take: result.data.limit + 1,
       select: {
         id: true,
         at: true,
@@ -45,7 +70,53 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({ spendLogs })
+    const hasNext = spendLogs.length > result.data.limit
+    const logsForResponse = hasNext
+      ? spendLogs.slice(0, result.data.limit)
+      : spendLogs
+
+    const nodeIds = [
+      ...new Set(
+        logsForResponse
+          .filter((log) => log.type === SPEND_LOG_TYPE.UNLOCK_NODE)
+          .map((log) => log.refId)
+      ),
+    ]
+
+    const skillNodes =
+      nodeIds.length > 0
+        ? await prisma.skillNode.findMany({
+            where: { id: { in: nodeIds } },
+            select: {
+              id: true,
+              title: true,
+              costSp: true,
+              treeId: true,
+              order: true,
+            },
+          })
+        : []
+
+    const skillNodeMap = new Map(skillNodes.map((node) => [node.id, node]))
+
+    const logs = logsForResponse.map((log) => ({
+      id: log.id,
+      categoryId: log.categoryId,
+      spSpent: log.costSp,
+      skillNode:
+        log.type === SPEND_LOG_TYPE.UNLOCK_NODE
+          ? skillNodeMap.get(log.refId) ?? null
+          : null,
+      createdAt: log.createdAt,
+    }))
+
+    const lastLog = logsForResponse[logsForResponse.length - 1]
+    const nextCursor =
+      hasNext && lastLog
+        ? `${lastLog.at.toISOString()}__${lastLog.id}`
+        : null
+
+    return NextResponse.json({ logs, nextCursor })
   } catch (error) {
     console.error('Failed to fetch spend logs:', error)
     return formatInternalError('SP消費履歴の取得に失敗しました')
