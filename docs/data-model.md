@@ -142,12 +142,12 @@ erDiagram
 PlayLog と DailyCategoryResult は暗黙的な多対多関係を持つ。
 Prismaでは明示的な中間テーブルを使用する。
 
-**中間テーブル: _PlayLogToDailyCategoryResult**
+**中間テーブル: _DailyCategoryResultToPlayLog**
 
 | カラム | 型 | 説明 |
 |--------|-----|------|
-| A | String | PlayLog.id |
-| B | String | DailyCategoryResult.id |
+| A | String | DailyCategoryResult.id |
+| B | String | PlayLog.id |
 
 **Prismaスキーマ例:**
 
