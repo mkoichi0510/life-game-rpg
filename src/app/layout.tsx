@@ -1,6 +1,16 @@
 import type { Metadata } from "next";
+import { Noto_Sans_JP } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { BottomNav } from "@/components/layout/bottom-nav";
+import { Header } from "@/components/layout/header";
+import { PageContainer } from "@/components/layout/page-container";
 import "./globals.css";
+
+const notoSansJP = Noto_Sans_JP({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Life Game RPG",
@@ -14,8 +24,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja">
-      <body className="antialiased">
-        {children}
+      <body className={`${notoSansJP.className} antialiased`}>
+        <div className="min-h-screen bg-background">
+          <Header />
+          <BottomNav />
+          <PageContainer>{children}</PageContainer>
+        </div>
         <Toaster position="top-center" richColors />
       </body>
     </html>
