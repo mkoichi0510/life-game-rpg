@@ -102,7 +102,8 @@ export async function GET(request: NextRequest) {
     const logs = logsForResponse.map((log) => ({
       id: log.id,
       categoryId: log.categoryId,
-      spSpent: log.costSp,
+      at: log.at,
+      costSp: log.costSp,
       skillNode:
         log.type === SPEND_LOG_TYPE.UNLOCK_NODE
           ? skillNodeMap.get(log.refId) ?? null

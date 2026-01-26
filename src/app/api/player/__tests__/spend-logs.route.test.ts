@@ -85,12 +85,19 @@ describe('GET /api/player/spend-logs', () => {
 
     expect(response.status).toBe(200)
     expect(data.logs).toHaveLength(1)
-    expect(data.logs[0].skillNode).toEqual({
-      id: 'node-2',
-      title: '速読術',
+    expect(data.logs[0]).toEqual({
+      id: 'log-2',
+      categoryId: 'cat-1',
+      at: '2024-01-15T10:00:00.000Z',
       costSp: 3,
-      treeId: 'tree-1',
-      order: 2,
+      skillNode: {
+        id: 'node-2',
+        title: '速読術',
+        costSp: 3,
+        treeId: 'tree-1',
+        order: 2,
+      },
+      createdAt: '2024-01-15T10:00:00.000Z',
     })
     expect(prisma.spendLog.findMany).toHaveBeenCalledWith({
       where: { categoryId: 'cat-1' },
@@ -188,5 +195,64 @@ describe('GET /api/player/spend-logs', () => {
 
     expect(response.status).toBe(500)
     expect(data.error.code).toBe('INTERNAL_ERROR')
+  })
+
+  it('should return correct results when using cursor for pagination', async () => {
+    // Simulate second page request with cursor
+    const thirdLog = {
+      id: 'log-1',
+      at: new Date('2024-01-15T08:00:00.000Z'),
+      categoryId: 'cat-1',
+      type: 'unlock_node',
+      costSp: 1,
+      refId: 'node-1',
+      dayKey: null,
+      createdAt: new Date('2024-01-15T08:00:00.000Z'),
+    }
+
+    vi.mocked(prisma.category.findUnique).mockResolvedValue({ id: 'cat-1' })
+    vi.mocked(prisma.spendLog.findMany).mockResolvedValue([thirdLog])
+    vi.mocked(prisma.skillNode.findMany).mockResolvedValue([
+      {
+        id: 'node-1',
+        title: '集中力',
+        costSp: 1,
+        treeId: 'tree-1',
+        order: 1,
+      },
+    ])
+
+    // Use cursor from previous page (log-2's at and id)
+    const cursor = '2024-01-15T10:00:00.000Z__log-2'
+    const request = new NextRequest(
+      `http://localhost:3000/api/player/spend-logs?categoryId=cat-1&limit=2&cursor=${encodeURIComponent(cursor)}`
+    )
+    const response = await GET(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.logs).toHaveLength(1)
+    expect(data.logs[0].id).toBe('log-1')
+    expect(data.logs[0].at).toBe('2024-01-15T08:00:00.000Z')
+    expect(data.logs[0].costSp).toBe(1)
+    expect(data.nextCursor).toBeNull()
+
+    // Verify cursor was used in the query
+    expect(prisma.spendLog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          categoryId: 'cat-1',
+          OR: [
+            { at: { lt: new Date('2024-01-15T10:00:00.000Z') } },
+            {
+              AND: [
+                { at: new Date('2024-01-15T10:00:00.000Z') },
+                { id: { lt: 'log-2' } },
+              ],
+            },
+          ],
+        }),
+      })
+    )
   })
 })
