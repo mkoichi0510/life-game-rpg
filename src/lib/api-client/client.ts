@@ -125,9 +125,28 @@ export function fetchDailyResult(dayKey: string) {
   );
 }
 
+export function fetchPlayLogs(dayKey: string, categoryId?: string) {
+  const params = new URLSearchParams({ dayKey });
+  if (categoryId) params.set("categoryId", categoryId);
+  return fetchJson<{ playLogs: PlayLog[] }>(`/api/plays?${params.toString()}`);
+}
+
 export function createPlay(input: { actionId: string; note?: string }) {
   return fetchJson<{ playLog: PlayLog }>("/api/plays", {
     method: "POST",
     body: JSON.stringify(input),
   });
+}
+
+export function deletePlayLog(id: string) {
+  return fetchJson<{ ok: boolean }>(`/api/plays/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+}
+
+export function confirmDailyResult(dayKey: string) {
+  return fetchJson<{ ok: boolean }>(
+    `/api/results/${encodeURIComponent(dayKey)}/confirm`,
+    { method: "POST" }
+  );
 }

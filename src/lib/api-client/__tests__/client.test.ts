@@ -3,7 +3,10 @@ import {
   fetchCategories,
   fetchActions,
   fetchDailyResult,
+  fetchPlayLogs,
   createPlay,
+  deletePlayLog,
+  confirmDailyResult,
 } from "../client";
 
 const mockFetch = vi.fn();
@@ -95,6 +98,60 @@ describe("createPlay", () => {
     expect(init.method).toBe("POST");
     expect(init.headers["Content-Type"]).toBe("application/json");
     expect(JSON.parse(init.body)).toEqual({ actionId: "a1", note: "test" });
+    expect(result).toEqual(payload);
+  });
+});
+
+describe("fetchPlayLogs", () => {
+  it("builds URL with dayKey only", async () => {
+    const payload = { playLogs: [] };
+    mockFetch.mockResolvedValue(jsonResponse(payload));
+
+    const result = await fetchPlayLogs("2026-01-27");
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      "/api/plays?dayKey=2026-01-27",
+      expect.anything()
+    );
+    expect(result).toEqual(payload);
+  });
+
+  it("builds URL with dayKey and categoryId", async () => {
+    mockFetch.mockResolvedValue(jsonResponse({ playLogs: [] }));
+
+    await fetchPlayLogs("2026-01-27", "cat-1");
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      "/api/plays?dayKey=2026-01-27&categoryId=cat-1",
+      expect.anything()
+    );
+  });
+});
+
+describe("deletePlayLog", () => {
+  it("sends DELETE to play log endpoint", async () => {
+    const payload = { ok: true };
+    mockFetch.mockResolvedValue(jsonResponse(payload));
+
+    const result = await deletePlayLog("play-1");
+
+    const [url, init] = mockFetch.mock.calls[0];
+    expect(url).toBe("/api/plays/play-1");
+    expect(init.method).toBe("DELETE");
+    expect(result).toEqual(payload);
+  });
+});
+
+describe("confirmDailyResult", () => {
+  it("sends POST to confirm endpoint", async () => {
+    const payload = { ok: true };
+    mockFetch.mockResolvedValue(jsonResponse(payload));
+
+    const result = await confirmDailyResult("2026-01-27");
+
+    const [url, init] = mockFetch.mock.calls[0];
+    expect(url).toBe("/api/results/2026-01-27/confirm");
+    expect(init.method).toBe("POST");
     expect(result).toEqual(payload);
   });
 });
