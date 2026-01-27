@@ -1,23 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
-  BookOpen,
   Check,
   CheckCircle2,
-  Dumbbell,
   Loader2,
-  Sparkles,
-  Star,
-  Wand2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CATEGORY_COLORS } from "@/lib/constants";
-import { getTodayKey } from "@/lib/date";
+import { getCategoryColor, getCategoryIcon } from "@/lib/category-ui";
+import { useTodayKey } from "@/lib/hooks/use-today-key";
 import { showError, showXpGained } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import {
@@ -31,35 +26,7 @@ import {
 } from "@/lib/api-client/client";
 
 const NOTE_MAX_LENGTH = 200;
-
-const CATEGORY_COLOR_MAP: Record<string, keyof typeof CATEGORY_COLORS> = {
-  "health-category": "health",
-  "certification-category": "learning",
-};
-
-function getCategoryColorKey(category: Category): keyof typeof CATEGORY_COLORS {
-  if (CATEGORY_COLOR_MAP[category.id]) {
-    return CATEGORY_COLOR_MAP[category.id];
-  }
-  if (category.name.includes("健康")) return "health";
-  if (category.name.includes("資格")) return "learning";
-  if (category.name.includes("趣味")) return "hobby";
-  if (category.name.includes("仕事")) return "work";
-  return "life";
-}
-
-function getCategoryIcon(category: Category) {
-  if (category.name.includes("健康")) return Dumbbell;
-  if (category.name.includes("資格")) return BookOpen;
-  if (category.name.includes("学習")) return BookOpen;
-  if (category.name.includes("趣味")) return Star;
-  if (category.name.includes("仕事")) return Wand2;
-  return Sparkles;
-}
-
-function sortByOrderThenId<T extends { order: number; id: string }>(items: T[]) {
-  return items.slice().sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
-}
+const SUCCESS_BANNER_DURATION_MS = 5000;
 
 type ValidationErrors = {
   category?: string;
@@ -81,8 +48,9 @@ export default function PlayPage() {
   const [success, setSuccess] = useState<{ xp: number; actionLabel: string } | null>(
     null
   );
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const todayKey = useMemo(() => getTodayKey(), []);
+  const todayKey = useTodayKey();
 
   const categoryResultMap = useMemo(() => {
     return new Map(categoryResults.map((result) => [result.categoryId, result]));
@@ -106,7 +74,7 @@ export default function PlayPage() {
         fetchCategories(true),
         fetchDailyResult(todayKey),
       ]);
-      setCategories(sortByOrderThenId(categoriesResponse.categories));
+      setCategories(categoriesResponse.categories);
       setCategoryResults(dailyResultResponse.categoryResults);
     } catch (error) {
       const message =
@@ -123,7 +91,7 @@ export default function PlayPage() {
       setLoadingActions(true);
       try {
         const response = await fetchActions(categoryId, true);
-        setActions(sortByOrderThenId(response.actions));
+        setActions(response.actions);
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "アクションの取得に失敗しました";
@@ -139,6 +107,12 @@ export default function PlayPage() {
   useEffect(() => {
     loadCategories();
   }, [loadCategories]);
+
+  useEffect(() => {
+    return () => {
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!selectedCategoryId) {
@@ -179,6 +153,8 @@ export default function PlayPage() {
       const xp = selectedCategory.xpPerPlay;
       showXpGained(xp);
       setSuccess({ xp, actionLabel: selectedAction.label });
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
+      successTimerRef.current = setTimeout(() => setSuccess(null), SUCCESS_BANNER_DURATION_MS);
       setSelectedActionId(null);
       setNote("");
       await loadCategories();
@@ -217,8 +193,7 @@ export default function PlayPage() {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             {categories.map((category) => {
-              const colorKey = getCategoryColorKey(category);
-              const color = CATEGORY_COLORS[colorKey];
+              const color = getCategoryColor(category);
               const Icon = getCategoryIcon(category);
               const isSelected = category.id === selectedCategoryId;
               const playCount = categoryResultMap.get(category.id)?.playCount ?? 0;
@@ -408,7 +383,10 @@ export default function PlayPage() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => setSuccess(null)}
+                onClick={() => {
+                  if (successTimerRef.current) clearTimeout(successTimerRef.current);
+                  setSuccess(null);
+                }}
               >
                 続けて登録
               </Button>

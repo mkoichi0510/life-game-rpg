@@ -1,3 +1,4 @@
+// TODO: Prisma型からの導出に統一する (see issue #47 — 後続PRで対応)
 export type Category = {
   id: string;
   name: string;
@@ -76,11 +77,16 @@ function getErrorMessage(text: string, fallback: string): string {
 }
 
 async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = {};
+  if (init?.body) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const response = await fetch(path, {
     cache: "no-store",
     ...init,
     headers: {
-      "Content-Type": "application/json",
+      ...headers,
       ...(init?.headers ?? {}),
     },
   });
@@ -93,7 +99,7 @@ async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   if (!text) {
-    return {} as T;
+    throw new Error(`Empty response from ${path}`);
   }
 
   return JSON.parse(text) as T;

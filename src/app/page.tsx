@@ -9,37 +9,21 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { calculateXpProgressPercent, calculateXpUntilNextSp } from "@/lib/calculation";
 import { CATEGORY_COLORS, DAILY_RESULT_STATUS } from "@/lib/constants";
+import { getCategoryColorKey } from "@/lib/category-ui";
 import { DEFAULT_TIMEZONE, getTodayKey } from "@/lib/date";
 import {
   fetchCategories,
   fetchCurrentSeasonalTitle,
   fetchDailyResult,
   fetchPlayerStates,
-  type Category,
 } from "@/lib/api-client";
 
 export const dynamic = "force-dynamic";
-
-const CATEGORY_COLOR_MAP: Record<string, keyof typeof CATEGORY_COLORS> = {
-  "health-category": "health",
-  "certification-category": "learning",
-};
 
 function formatTodayLabel(date = new Date()): string {
   return formatInTimeZone(date, DEFAULT_TIMEZONE, "yyyy年M月d日（EEE）", {
     locale: ja,
   });
-}
-
-function getCategoryColorKey(category: Category): keyof typeof CATEGORY_COLORS {
-  if (CATEGORY_COLOR_MAP[category.id]) {
-    return CATEGORY_COLOR_MAP[category.id];
-  }
-  if (category.name.includes("健康")) return "health";
-  if (category.name.includes("資格")) return "learning";
-  if (category.name.includes("趣味")) return "hobby";
-  if (category.name.includes("仕事")) return "work";
-  return "life";
 }
 
 function getRankBadgeStyles(rankLabel: string | undefined): string {
