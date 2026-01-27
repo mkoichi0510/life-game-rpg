@@ -98,7 +98,7 @@ export default async function Home() {
   );
   const isConfirmed = dailyResult.status === DAILY_RESULT_STATUS.CONFIRMED;
   const xpSummaryLabel = isConfirmed ? "今日の獲得XP" : "未確定XP合計";
-  const xpSummaryValue = isConfirmed ? totalXpEarned : totalXpEarned;
+  const xpSummaryValue = totalXpEarned;
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
