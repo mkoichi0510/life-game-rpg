@@ -76,11 +76,82 @@
   }
 }
 
+/* XP/SPグラデーションテキスト */
+.text-xp-gradient {
+  background: linear-gradient(to right, #f59e0b, #fbbf24);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-sp-gradient {
+  background: linear-gradient(to right, #7c3aed, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 背景グロー */
+.bg-xp-glow {
+  background: linear-gradient(to right, #fef3c7, #fef9c3);
+}
+
+.bg-sp-glow {
+  background: linear-gradient(to right, #ede9fe, #f3e8ff);
+}
+
+/* ダークモード対応 */
+.dark .bg-xp-glow {
+  background: linear-gradient(to right, rgba(245, 158, 11, 0.15), rgba(251, 191, 36, 0.15));
+}
+
+.dark .bg-sp-glow {
+  background: linear-gradient(to right, rgba(124, 58, 237, 0.15), rgba(168, 85, 247, 0.15));
+}
+
+/* シマー効果 */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 200%;
+  }
+}
+
 /* アニメーション無効化（アクセシビリティ） */
 @media (prefers-reduced-motion: reduce) {
   .animate-pulse-glow,
   .animate-xp-pop,
-  .animate-fade-in {
+  .animate-fade-in,
+  .animate-shimmer,
+  .animate-count-up,
+  .animate-badge-pop {
+    animation: none;
+  }
+
+  .shimmer::after {
     animation: none;
   }
 

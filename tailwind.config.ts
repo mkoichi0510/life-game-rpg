@@ -91,11 +91,27 @@ const config: Config = {
           from: { opacity: "0" },
           to: { opacity: "1" },
         },
+        shimmer: {
+          "0%": { left: "-100%" },
+          "100%": { left: "200%" },
+        },
+        "count-up": {
+          "0%": { opacity: "0", transform: "translateY(8px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "badge-pop": {
+          "0%": { opacity: "0", transform: "scale(0.8)" },
+          "50%": { transform: "scale(1.1)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
       },
       animation: {
         "xp-pop": "xp-pop 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
         "fade-in": "fade-in 300ms ease-in-out forwards",
+        shimmer: "shimmer 2s ease-in-out infinite",
+        "count-up": "count-up 500ms ease-out forwards",
+        "badge-pop": "badge-pop 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
       },
     },
   },
