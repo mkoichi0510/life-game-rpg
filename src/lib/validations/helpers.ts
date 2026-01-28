@@ -61,32 +61,6 @@ export function formatInvalidOperationError(
   )
 }
 
-export function formatBadRequestError(message: string, details?: ErrorDetails) {
-  return NextResponse.json(
-    {
-      error: {
-        code: 'BAD_REQUEST',
-        message,
-        ...(details ? { details } : {}),
-      },
-    },
-    { status: 400 }
-  )
-}
-
-export function formatConflictError(message: string, details?: ErrorDetails) {
-  return NextResponse.json(
-    {
-      error: {
-        code: 'CONFLICT',
-        message,
-        ...(details ? { details } : {}),
-      },
-    },
-    { status: 409 }
-  )
-}
-
 export function formatAlreadyUnlockedError(nodeId: string) {
   return NextResponse.json(
     {

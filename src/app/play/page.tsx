@@ -167,6 +167,7 @@ export default function PlayPage() {
         const reason = error.details.reason;
         if (field === "actionId") {
           setErrors({ action: String(reason ?? "アクションを選択してください") });
+          return;
         }
       }
       const message = getUserMessage(error, "プレイの登録に失敗しました");

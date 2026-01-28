@@ -179,14 +179,14 @@ export default function SkillsPage() {
           setSelectedTreeId(null);
         }
       } catch (error) {
-      const message = getUserMessage(error, "スキルツリーの取得に失敗しました");
-      showError(message);
-      setTrees([]);
-      setNodesByTreeId(new Map());
-    } finally {
-      if (latestCategoryIdRef.current === categoryId) {
-        setLoadingTrees(false);
-      }
+        const message = getUserMessage(error, "スキルツリーの取得に失敗しました");
+        showError(message);
+        setTrees([]);
+        setNodesByTreeId(new Map());
+      } finally {
+        if (latestCategoryIdRef.current === categoryId) {
+          setLoadingTrees(false);
+        }
       }
     },
     [loadTreeNodes]
