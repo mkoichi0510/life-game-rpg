@@ -196,3 +196,84 @@ describe("error handling", () => {
     await expect(fetchCategories()).rejects.toThrow("Empty response from");
   });
 });
+
+describe("fetchPlayLogs error handling", () => {
+  it("throws on 404 error", async () => {
+    const errorPayload = { error: { code: "NOT_FOUND", message: "Play logs not found" } };
+    mockFetch.mockResolvedValue(jsonResponse(errorPayload, 404));
+
+    await expect(fetchPlayLogs("2026-01-27")).rejects.toThrow("Play logs not found");
+  });
+
+  it("throws on 500 error", async () => {
+    mockFetch.mockResolvedValue(textResponse("Internal Server Error", 500));
+
+    await expect(fetchPlayLogs("2026-01-27")).rejects.toThrow("Internal Server Error");
+  });
+
+  it("throws on empty response", async () => {
+    mockFetch.mockResolvedValue(textResponse("", 200));
+
+    await expect(fetchPlayLogs("2026-01-27")).rejects.toThrow("Empty response from");
+  });
+});
+
+describe("deletePlayLog error handling", () => {
+  it("throws on 404 error", async () => {
+    const errorPayload = { error: { code: "NOT_FOUND", message: "Play log not found" } };
+    mockFetch.mockResolvedValue(jsonResponse(errorPayload, 404));
+
+    await expect(deletePlayLog("play-1")).rejects.toThrow("Play log not found");
+  });
+
+  it("throws on 500 error", async () => {
+    mockFetch.mockResolvedValue(textResponse("Internal Server Error", 500));
+
+    await expect(deletePlayLog("play-1")).rejects.toThrow("Internal Server Error");
+  });
+
+  it("throws on empty response", async () => {
+    mockFetch.mockResolvedValue(textResponse("", 200));
+
+    await expect(deletePlayLog("play-1")).rejects.toThrow("Empty response from");
+  });
+
+  it("encodes special characters in id", async () => {
+    mockFetch.mockResolvedValue(jsonResponse({ ok: true }));
+
+    await deletePlayLog("id/with special&chars");
+
+    const [url] = mockFetch.mock.calls[0];
+    expect(url).toBe("/api/plays/id%2Fwith%20special%26chars");
+  });
+});
+
+describe("confirmDailyResult error handling", () => {
+  it("throws on 404 error", async () => {
+    const errorPayload = { error: { code: "NOT_FOUND", message: "Result not found" } };
+    mockFetch.mockResolvedValue(jsonResponse(errorPayload, 404));
+
+    await expect(confirmDailyResult("2026-01-27")).rejects.toThrow("Result not found");
+  });
+
+  it("throws on 500 error", async () => {
+    mockFetch.mockResolvedValue(textResponse("Internal Server Error", 500));
+
+    await expect(confirmDailyResult("2026-01-27")).rejects.toThrow("Internal Server Error");
+  });
+
+  it("throws on empty response", async () => {
+    mockFetch.mockResolvedValue(textResponse("", 200));
+
+    await expect(confirmDailyResult("2026-01-27")).rejects.toThrow("Empty response from");
+  });
+
+  it("encodes special characters in dayKey", async () => {
+    mockFetch.mockResolvedValue(jsonResponse({ ok: true }));
+
+    await confirmDailyResult("2026/01/27");
+
+    const [url] = mockFetch.mock.calls[0];
+    expect(url).toBe("/api/results/2026%2F01%2F27/confirm");
+  });
+});
