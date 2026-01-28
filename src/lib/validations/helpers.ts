@@ -1,6 +1,8 @@
 import { ZodError } from 'zod'
 import { NextResponse } from 'next/server'
 
+type ErrorDetails = Record<string, unknown> | undefined
+
 export function formatZodError(error: ZodError) {
   const firstError = error.errors[0]
   return NextResponse.json(
@@ -40,6 +42,22 @@ export function formatInternalError(message: string) {
       },
     },
     { status: 500 }
+  )
+}
+
+export function formatInvalidOperationError(
+  message: string,
+  details?: ErrorDetails
+) {
+  return NextResponse.json(
+    {
+      error: {
+        code: 'INVALID_OPERATION',
+        message,
+        ...(details ? { details } : {}),
+      },
+    },
+    { status: 400 }
   )
 }
 

@@ -1,3 +1,5 @@
+import { fetchJson } from "./fetch";
+
 // TODO: Prisma型からの導出に統一する (see issue #47 — 後続PRで対応)
 export type Category = {
   id: string;
@@ -111,60 +113,29 @@ export type PlayLog = {
   };
 };
 
-type ApiErrorResponse = {
-  error: {
-    code: string;
-    message: string;
-    details?: Record<string, unknown>;
-  };
-};
-
-function getErrorMessage(text: string, fallback: string): string {
-  try {
-    const data = JSON.parse(text) as ApiErrorResponse;
-    return data.error?.message ?? fallback;
-  } catch {
-    return text || fallback;
-  }
-}
-
-async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
+async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const headers: Record<string, string> = {};
   if (init?.body) {
     headers["Content-Type"] = "application/json";
   }
 
-  const response = await fetch(path, {
-    cache: "no-store",
+  return fetchJson<T>(path, {
     ...init,
     headers: {
       ...headers,
       ...(init?.headers ?? {}),
     },
   });
-
-  const text = await response.text();
-
-  if (!response.ok) {
-    const message = getErrorMessage(text, `Failed to fetch ${path}`);
-    throw new Error(message);
-  }
-
-  if (!text) {
-    throw new Error(`Empty response from ${path}`);
-  }
-
-  return JSON.parse(text) as T;
 }
 
 export function fetchCategories(visibleOnly = true) {
-  return fetchJson<{ categories: Category[] }>(
+  return requestJson<{ categories: Category[] }>(
     `/api/categories?visible=${visibleOnly ? "true" : "false"}`
   );
 }
 
 export function fetchActions(categoryId: string, visibleOnly = true) {
-  return fetchJson<{ actions: Action[] }>(
+  return requestJson<{ actions: Action[] }>(
     `/api/actions?categoryId=${encodeURIComponent(categoryId)}&visible=${
       visibleOnly ? "true" : "false"
     }`
@@ -172,7 +143,7 @@ export function fetchActions(categoryId: string, visibleOnly = true) {
 }
 
 export function fetchDailyResult(dayKey: string) {
-  return fetchJson<{ dailyResult: DailyResult; categoryResults: DailyCategoryResult[] }>(
+  return requestJson<{ dailyResult: DailyResult; categoryResults: DailyCategoryResult[] }>(
     `/api/results/${encodeURIComponent(dayKey)}`
   );
 }
@@ -180,24 +151,24 @@ export function fetchDailyResult(dayKey: string) {
 export function fetchPlayLogs(dayKey: string, categoryId?: string) {
   const params = new URLSearchParams({ dayKey });
   if (categoryId) params.set("categoryId", categoryId);
-  return fetchJson<{ playLogs: PlayLog[] }>(`/api/plays?${params.toString()}`);
+  return requestJson<{ playLogs: PlayLog[] }>(`/api/plays?${params.toString()}`);
 }
 
 export function createPlay(input: { actionId: string; note?: string }) {
-  return fetchJson<{ playLog: PlayLog }>("/api/plays", {
+  return requestJson<{ playLog: PlayLog }>("/api/plays", {
     method: "POST",
     body: JSON.stringify(input),
   });
 }
 
 export function deletePlayLog(id: string) {
-  return fetchJson<{ ok: boolean }>(`/api/plays/${encodeURIComponent(id)}`, {
+  return requestJson<{ ok: boolean }>(`/api/plays/${encodeURIComponent(id)}`, {
     method: "DELETE",
   });
 }
 
 export function confirmDailyResult(dayKey: string) {
-  return fetchJson<{ ok: boolean }>(
+  return requestJson<{ ok: boolean }>(
     `/api/results/${encodeURIComponent(dayKey)}/confirm`,
     { method: "POST" }
   );
@@ -208,28 +179,28 @@ export function fetchSkillTrees(categoryId: string, visibleOnly = true) {
     categoryId,
     visible: visibleOnly ? "true" : "false",
   });
-  return fetchJson<{ trees: SkillTree[] }>(`/api/skills/trees?${params.toString()}`);
+  return requestJson<{ trees: SkillTree[] }>(`/api/skills/trees?${params.toString()}`);
 }
 
 export function fetchSkillNodes(treeId: string) {
   const params = new URLSearchParams({ treeId });
-  return fetchJson<{ nodes: SkillNode[] }>(`/api/skills/nodes?${params.toString()}`);
+  return requestJson<{ nodes: SkillNode[] }>(`/api/skills/nodes?${params.toString()}`);
 }
 
 export function unlockSkillNode(nodeId: string) {
-  return fetchJson<{ unlockedNode: { id: string; nodeId: string; unlockedAt: string } }>(
+  return requestJson<{ unlockedNode: { id: string; nodeId: string; unlockedAt: string } }>(
     `/api/skills/nodes/${encodeURIComponent(nodeId)}/unlock`,
     { method: "POST" }
   );
 }
 
 export function fetchPlayerStates() {
-  return fetchJson<{ playerStates: PlayerCategoryState[] }>("/api/player/states");
+  return requestJson<{ playerStates: PlayerCategoryState[] }>("/api/player/states");
 }
 
 export function fetchCurrentSeasonalTitle(categoryId: string) {
   const params = new URLSearchParams({ categoryId });
-  return fetchJson<SeasonalTitleCurrent>(
+  return requestJson<SeasonalTitleCurrent>(
     `/api/skills/seasonal-titles/current?${params.toString()}`
   );
 }

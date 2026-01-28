@@ -1,6 +1,7 @@
 import "server-only";
 
 import { headers } from "next/headers";
+import { fetchJson } from "./fetch";
 
 export type Category = {
   id: string;
@@ -83,39 +84,32 @@ async function getBaseUrl(): Promise<string> {
   );
 }
 
-async function fetchJson<T>(path: string): Promise<T> {
+async function requestJson<T>(path: string): Promise<T> {
   const baseUrl = await getBaseUrl();
   const url = `${baseUrl}${path}`;
-  const response = await fetch(url, { cache: "no-store" });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(`Failed to fetch ${path}: ${response.status} ${message}`);
-  }
-
-  return response.json() as Promise<T>;
+  return fetchJson<T>(url);
 }
 
 export function fetchCategories(visibleOnly = true) {
-  return fetchJson<{ categories: Category[] }>(
+  return requestJson<{ categories: Category[] }>(
     `/api/categories?visible=${visibleOnly ? "true" : "false"}`
   );
 }
 
 export function fetchDailyResult(dayKey: string) {
-  return fetchJson<{ dailyResult: DailyResult; categoryResults: DailyCategoryResult[] }>(
+  return requestJson<{ dailyResult: DailyResult; categoryResults: DailyCategoryResult[] }>(
     `/api/results/${encodeURIComponent(dayKey)}`
   );
 }
 
 export function fetchPlayerStates() {
-  return fetchJson<{ playerStates: PlayerCategoryState[] }>(
+  return requestJson<{ playerStates: PlayerCategoryState[] }>(
     "/api/player/states"
   );
 }
 
 export function fetchCurrentSeasonalTitle(categoryId: string) {
-  return fetchJson<SeasonalTitleCurrent>(
+  return requestJson<SeasonalTitleCurrent>(
     `/api/skills/seasonal-titles/current?categoryId=${encodeURIComponent(
       categoryId
     )}`

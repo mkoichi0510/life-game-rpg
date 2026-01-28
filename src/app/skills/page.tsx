@@ -27,6 +27,7 @@ import {
   type SkillNode,
   type SkillTree,
 } from "@/lib/api-client/client";
+import { getUserMessage } from "@/lib/api-client/errors";
 
 export default function SkillsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -129,8 +130,7 @@ export default function SkillsPage() {
         setSelectedCategoryId(sortedCategories[0].id);
       }
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "カテゴリの取得に失敗しました";
+      const message = getUserMessage(error, "カテゴリの取得に失敗しました");
       showError(message);
     } finally {
       setLoadingBase(false);
@@ -179,8 +179,7 @@ export default function SkillsPage() {
           setSelectedTreeId(null);
         }
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "スキルツリーの取得に失敗しました";
+        const message = getUserMessage(error, "スキルツリーの取得に失敗しました");
         showError(message);
         setTrees([]);
         setNodesByTreeId(new Map());
@@ -203,8 +202,7 @@ export default function SkillsPage() {
         return next;
       });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "ノードの取得に失敗しました";
+      const message = getUserMessage(error, "ノードの取得に失敗しました");
       showError(message);
     }
   }, [loadTreeNodes, selectedTreeId]);
@@ -270,8 +268,7 @@ export default function SkillsPage() {
       ]);
       setUnlockDialogOpen(false);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "ノード解放に失敗しました";
+      const message = getUserMessage(error, "ノード解放に失敗しました");
       showError(message);
     } finally {
       setUnlocking(false);

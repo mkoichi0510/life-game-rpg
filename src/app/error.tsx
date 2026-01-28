@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -25,7 +26,12 @@ export default function Error({
           <p className="text-sm text-muted-foreground">
             一時的にデータ取得ができませんでした。再読み込みしてください。
           </p>
-          <Button onClick={reset}>再読み込み</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={reset}>再読み込み</Button>
+            <Button asChild variant="outline">
+              <Link href="/">ホームへ戻る</Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

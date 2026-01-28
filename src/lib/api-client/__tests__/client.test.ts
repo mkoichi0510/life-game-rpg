@@ -8,6 +8,7 @@ import {
   deletePlayLog,
   confirmDailyResult,
 } from "../client";
+import { ApiNetworkError, ApiTimeoutError } from "../errors";
 
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
@@ -194,6 +195,18 @@ describe("error handling", () => {
     mockFetch.mockResolvedValue(textResponse("", 200));
 
     await expect(fetchCategories()).rejects.toThrow("Empty response from");
+  });
+
+  it("throws timeout error on AbortError", async () => {
+    mockFetch.mockRejectedValue({ name: "AbortError" });
+
+    await expect(fetchCategories()).rejects.toBeInstanceOf(ApiTimeoutError);
+  });
+
+  it("throws network error on fetch failure", async () => {
+    mockFetch.mockRejectedValue(new TypeError("Network failed"));
+
+    await expect(fetchCategories()).rejects.toBeInstanceOf(ApiNetworkError);
   });
 });
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { dayKeyParamSchema } from '@/lib/validations/result'
 import {
   formatInternalError,
+  formatInvalidOperationError,
   formatZodError,
 } from '@/lib/validations/helpers'
 import {
@@ -31,27 +32,11 @@ export async function POST(
     return NextResponse.json({ ok: true })
   } catch (error) {
     if (error instanceof AlreadyConfirmedError) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'INVALID_OPERATION',
-            message: '既に確定済みです',
-          },
-        },
-        { status: 400 }
-      )
+      return formatInvalidOperationError('既に確定済みです')
     }
 
     if (error instanceof FutureDateError) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'INVALID_OPERATION',
-            message: '未来の日付は確定できません',
-          },
-        },
-        { status: 400 }
-      )
+      return formatInvalidOperationError('未来の日付は確定できません')
     }
 
     console.error('Failed to confirm daily result:', error)

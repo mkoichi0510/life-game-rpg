@@ -4,6 +4,7 @@ import { calculateSpFromXp, calculateXpEarned } from '@/lib/calculation'
 import { playIdParamSchema } from '@/lib/validations/play'
 import {
   formatInternalError,
+  formatInvalidOperationError,
   formatNotFoundError,
   formatZodError,
 } from '@/lib/validations/helpers'
@@ -53,14 +54,8 @@ export async function DELETE(
     })
 
     if (dailyResult?.status === 'confirmed') {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'INVALID_OPERATION',
-            message: '確定済みの日付のプレイは削除できません',
-          },
-        },
-        { status: 400 }
+      return formatInvalidOperationError(
+        '確定済みの日付のプレイは削除できません'
       )
     }
 
