@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createCategorySchema } from '@/lib/validations/category'
-import { formatZodError } from '@/lib/validations/helpers'
+import {
+  formatInternalError,
+  formatZodError,
+} from '@/lib/validations/helpers'
 
 /**
  * GET /api/categories
@@ -22,15 +25,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ categories })
   } catch (error) {
     console.error('Failed to fetch categories:', error)
-    return NextResponse.json(
-      {
-        error: {
-          code: 'INTERNAL_ERROR',
-          message: 'カテゴリの取得に失敗しました',
-        },
-      },
-      { status: 500 }
-    )
+    return formatInternalError('カテゴリの取得に失敗しました')
   }
 }
 
@@ -61,14 +56,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ category }, { status: 201 })
   } catch (error) {
     console.error('Failed to create category:', error)
-    return NextResponse.json(
-      {
-        error: {
-          code: 'INTERNAL_ERROR',
-          message: 'カテゴリの作成に失敗しました',
-        },
-      },
-      { status: 500 }
-    )
+    return formatInternalError('カテゴリの作成に失敗しました')
   }
 }

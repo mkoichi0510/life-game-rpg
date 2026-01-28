@@ -39,6 +39,7 @@ import {
   type DailyResult,
   type PlayLog,
 } from "@/lib/api-client/client";
+import { getUserMessage } from "@/lib/api-client/errors";
 
 function formatDayLabel(dayKey: string): string {
   return formatInTimeZone(parseDayKey(dayKey), DEFAULT_TIMEZONE, "yyyy年M月d日（EEE）", {
@@ -113,10 +114,7 @@ export default function ResultPage() {
       setPlayLogs(playLogsResponse.playLogs);
       setOptimisticallyDeletedIds(new Set());
     } catch (fetchError) {
-      const message =
-        fetchError instanceof Error
-          ? fetchError.message
-          : "リザルトの取得に失敗しました";
+      const message = getUserMessage(fetchError, "リザルトの取得に失敗しました");
       setError(message);
       showError(message);
     } finally {
@@ -137,10 +135,7 @@ export default function ResultPage() {
       setConfirmOpen(false);
       await loadResult();
     } catch (confirmError) {
-      const message =
-        confirmError instanceof Error
-          ? confirmError.message
-          : "日次確定に失敗しました";
+      const message = getUserMessage(confirmError, "日次確定に失敗しました");
       showError(message);
     } finally {
       setConfirming(false);
@@ -156,10 +151,7 @@ export default function ResultPage() {
       await deletePlayLog(id);
       await loadResult();
     } catch (deleteError) {
-      const message =
-        deleteError instanceof Error
-          ? deleteError.message
-          : "プレイログの削除に失敗しました";
+      const message = getUserMessage(deleteError, "プレイログの削除に失敗しました");
       showError(message);
       setOptimisticallyDeletedIds((prev) => {
         const next = new Set(prev);

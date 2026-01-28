@@ -15,6 +15,7 @@ import { getCategoryColor, getCategoryIcon } from "@/lib/category-ui";
 import { useTodayKey } from "@/lib/hooks/use-today-key";
 import { showError, showXpGained } from "@/lib/toast";
 import { cn } from "@/lib/utils";
+import { ApiHttpError, getUserMessage } from "@/lib/api-client/errors";
 import {
   createPlay,
   fetchActions,
@@ -77,8 +78,7 @@ export default function PlayPage() {
       setCategories(categoriesResponse.categories);
       setCategoryResults(dailyResultResponse.categoryResults);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "カテゴリの取得に失敗しました";
+      const message = getUserMessage(error, "カテゴリの取得に失敗しました");
       setLoadError(message);
       showError(message);
     } finally {
@@ -93,8 +93,7 @@ export default function PlayPage() {
         const response = await fetchActions(categoryId, true);
         setActions(response.actions);
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "アクションの取得に失敗しました";
+        const message = getUserMessage(error, "アクションの取得に失敗しました");
         showError(message);
         setActions([]);
       } finally {
@@ -159,8 +158,18 @@ export default function PlayPage() {
       setNote("");
       await loadCategories();
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "プレイの登録に失敗しました";
+      if (
+        error instanceof ApiHttpError &&
+        error.code === "VALIDATION_ERROR" &&
+        error.details
+      ) {
+        const field = error.details.field;
+        const reason = error.details.reason;
+        if (field === "actionId") {
+          setErrors({ action: String(reason ?? "アクションを選択してください") });
+        }
+      }
+      const message = getUserMessage(error, "プレイの登録に失敗しました");
       showError(message);
     } finally {
       setSubmitting(false);
