@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import type { KeyboardEvent } from "react";
 import { SkillNodeItem } from "@/components/skills/skill-node";
 import type { SkillNode } from "@/lib/api-client/client";
@@ -23,10 +23,6 @@ export function SkillTreeView({
   onNodeActivate,
   colorClasses,
 }: SkillTreeViewProps) {
-  const orderedNodes = useMemo(
-    () => nodes.slice().sort((a, b) => a.order - b.order || a.id.localeCompare(b.id)),
-    [nodes]
-  );
   const nodeRefs = useRef(new Map<string, HTMLButtonElement | null>());
 
   useEffect(() => {
@@ -37,23 +33,23 @@ export function SkillTreeView({
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (!selectedNodeId) return;
-    const currentIndex = orderedNodes.findIndex((node) => node.id === selectedNodeId);
+    const currentIndex = nodes.findIndex((node) => node.id === selectedNodeId);
     if (currentIndex === -1) return;
 
     if (event.key === "ArrowDown" || event.key === "ArrowRight") {
-      const next = orderedNodes[Math.min(orderedNodes.length - 1, currentIndex + 1)];
+      const next = nodes[Math.min(nodes.length - 1, currentIndex + 1)];
       if (next) onNodeSelect(next);
       event.preventDefault();
     }
 
     if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
-      const prev = orderedNodes[Math.max(0, currentIndex - 1)];
+      const prev = nodes[Math.max(0, currentIndex - 1)];
       if (prev) onNodeSelect(prev);
       event.preventDefault();
     }
 
     if (event.key === "Enter" || event.key === " ") {
-      const current = orderedNodes[currentIndex];
+      const current = nodes[currentIndex];
       if (current) onNodeActivate(current);
       event.preventDefault();
     }
@@ -66,16 +62,18 @@ export function SkillTreeView({
       onKeyDown={handleKeyDown}
       className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6"
     >
-      {orderedNodes.map((node, index) => (
+      {nodes.map((node, index) => (
         <SkillNodeItem
           key={node.id}
-          ref={(el) => nodeRefs.current.set(node.id, el)}
+          ref={(el) => {
+            nodeRefs.current.set(node.id, el);
+          }}
           node={node}
           state={nodeStates.get(node.id) ?? SKILL_NODE_STATE.LOCKED}
           isSelected={node.id === selectedNodeId}
-          isLast={index === orderedNodes.length - 1}
+          isLast={index === nodes.length - 1}
           colorClasses={colorClasses}
-          onSelect={onNodeActivate}
+          onActivate={onNodeActivate}
         />
       ))}
     </div>

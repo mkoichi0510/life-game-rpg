@@ -47,6 +47,7 @@ export default function SkillsPage() {
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const latestCategoryIdRef = useRef<string | null>(null);
+  const selectedTreeIdRef = useRef<string | null>(null);
 
   const playerStateMap = useMemo(
     () => new Map(playerStates.map((state) => [state.categoryId, state])),
@@ -167,10 +168,11 @@ export default function SkillsPage() {
         setNodesByTreeId(new Map(nodesEntries));
 
         if (sortedTrees.length > 0) {
+          const currentTreeId = selectedTreeIdRef.current;
           const nextTreeId =
-            selectedTreeId &&
-            sortedTrees.some((tree) => tree.id === selectedTreeId)
-              ? selectedTreeId
+            currentTreeId &&
+            sortedTrees.some((tree) => tree.id === currentTreeId)
+              ? currentTreeId
               : sortedTrees[0].id;
           setSelectedTreeId(nextTreeId);
         } else {
@@ -188,7 +190,7 @@ export default function SkillsPage() {
         }
       }
     },
-    [loadTreeNodes, selectedTreeId]
+    [loadTreeNodes]
   );
 
   const refreshSelectedTreeNodes = useCallback(async () => {
@@ -206,6 +208,10 @@ export default function SkillsPage() {
       showError(message);
     }
   }, [loadTreeNodes, selectedTreeId]);
+
+  useEffect(() => {
+    selectedTreeIdRef.current = selectedTreeId;
+  }, [selectedTreeId]);
 
   useEffect(() => {
     loadBaseData();

@@ -37,8 +37,8 @@ export function NodeUnlockDialog({
   if (!node) return null;
 
   const canUnlock = nodeState === SKILL_NODE_STATE.UNLOCKABLE;
-  const hasPrerequisite = node.order === 1;
-  const prerequisiteLabel = hasPrerequisite
+  const isFirstNode = node.order === 1;
+  const prerequisiteLabel = isFirstNode
     ? "前提: なし"
     : `前提: ${prerequisiteNode?.title ?? "未解放"}`;
   const spShort =
@@ -67,7 +67,7 @@ export function NodeUnlockDialog({
               SPが不足しています
             </p>
           )}
-          {!hasPrerequisite && !prerequisiteNode?.isUnlocked && (
+          {!isFirstNode && !prerequisiteNode?.isUnlocked && (
             <p className="text-xs text-muted-foreground">
               前提ノードが未解放です
             </p>

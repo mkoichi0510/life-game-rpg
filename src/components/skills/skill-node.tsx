@@ -12,11 +12,11 @@ interface SkillNodeProps {
   isSelected: boolean;
   isLast: boolean;
   colorClasses: { text: string; bg: string; border: string };
-  onSelect: (node: SkillNode) => void;
+  onActivate: (node: SkillNode) => void;
 }
 
 export const SkillNodeItem = forwardRef<HTMLButtonElement, SkillNodeProps>(
-  ({ node, state, isSelected, isLast, colorClasses, onSelect }, ref) => {
+  ({ node, state, isSelected, isLast, colorClasses, onActivate }, ref) => {
     const isUnlocked = state === SKILL_NODE_STATE.UNLOCKED;
     const isUnlockable = state === SKILL_NODE_STATE.UNLOCKABLE;
 
@@ -37,7 +37,7 @@ export const SkillNodeItem = forwardRef<HTMLButtonElement, SkillNodeProps>(
           aria-selected={isSelected}
           aria-disabled={!isUnlockable && !isUnlocked}
           aria-label={`${node.title}、${stateLabel}`}
-          onClick={() => onSelect(node)}
+          onClick={() => onActivate(node)}
           className={cn(
             "flex min-h-[48px] w-full items-center gap-3 rounded-lg border px-4 py-3 text-left text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
             isSelected && "ring-2 ring-ring ring-offset-2",
