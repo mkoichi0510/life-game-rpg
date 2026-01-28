@@ -377,7 +377,12 @@ export default function ResultPage() {
           size="lg"
           disabled={loading || isConfirmed}
         >
-          {isConfirmed ? "確定済み" : "今日を確定する"}
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              読み込み中...
+            </span>
+          ) : isConfirmed ? "確定済み" : "今日を確定する"}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
