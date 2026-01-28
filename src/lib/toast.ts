@@ -43,9 +43,17 @@ export function showDayConfirmed(totalXp: number, totalSp: number): void {
  * ノード解放通知を表示
  * @param nodeName - 解放したノード名
  */
-export function showNodeUnlocked(nodeName: string): void {
+export function showNodeUnlocked(
+  nodeName: string,
+  costSp?: number,
+  remainingSp?: number
+): void {
+  const hasSpInfo = typeof costSp === "number" && typeof remainingSp === "number";
+  const description = hasSpInfo
+    ? `${nodeName} / -${costSp} SP / 残り ${remainingSp} SP`
+    : nodeName;
   toast.success("称号を獲得！", {
-    description: nodeName,
+    description,
     duration: 4000,
   });
 }

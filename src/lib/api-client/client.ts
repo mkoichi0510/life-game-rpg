@@ -43,6 +43,58 @@ export type DailyCategoryResult = {
   };
 };
 
+export type SkillTree = {
+  id: string;
+  categoryId: string;
+  name: string;
+  visible: boolean;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SkillNode = {
+  id: string;
+  treeId: string;
+  order: number;
+  title: string;
+  costSp: number;
+  createdAt: string;
+  updatedAt: string;
+  isUnlocked: boolean;
+  unlockedAt: string | null;
+};
+
+export type SeasonalTitle = {
+  id: string;
+  categoryId: string;
+  label: string;
+  minSpEarned: number;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SeasonalTitleCurrent = {
+  currentTitle: SeasonalTitle | null;
+  totalSpEarned: number;
+  rankWindowDays: number;
+};
+
+export type PlayerCategoryState = {
+  id: string;
+  categoryId: string;
+  xpTotal: number;
+  spUnspent: number;
+  createdAt: string;
+  updatedAt: string;
+  category: {
+    id: string;
+    name: string;
+    order: number;
+  };
+};
+
 export type PlayLog = {
   id: string;
   dayKey: string;
@@ -148,5 +200,36 @@ export function confirmDailyResult(dayKey: string) {
   return fetchJson<{ ok: boolean }>(
     `/api/results/${encodeURIComponent(dayKey)}/confirm`,
     { method: "POST" }
+  );
+}
+
+export function fetchSkillTrees(categoryId: string, visibleOnly = true) {
+  const params = new URLSearchParams({
+    categoryId,
+    visible: visibleOnly ? "true" : "false",
+  });
+  return fetchJson<{ trees: SkillTree[] }>(`/api/skills/trees?${params.toString()}`);
+}
+
+export function fetchSkillNodes(treeId: string) {
+  const params = new URLSearchParams({ treeId });
+  return fetchJson<{ nodes: SkillNode[] }>(`/api/skills/nodes?${params.toString()}`);
+}
+
+export function unlockSkillNode(nodeId: string) {
+  return fetchJson<{ unlockedNode: { id: string; nodeId: string; unlockedAt: string } }>(
+    `/api/skills/nodes/${encodeURIComponent(nodeId)}/unlock`,
+    { method: "POST" }
+  );
+}
+
+export function fetchPlayerStates() {
+  return fetchJson<{ playerStates: PlayerCategoryState[] }>("/api/player/states");
+}
+
+export function fetchCurrentSeasonalTitle(categoryId: string) {
+  const params = new URLSearchParams({ categoryId });
+  return fetchJson<SeasonalTitleCurrent>(
+    `/api/skills/seasonal-titles/current?${params.toString()}`
   );
 }
