@@ -76,9 +76,19 @@
 
 ### テスト
 
-- **フレームワーク**: Vitest
+#### ユニットテスト（Vitest）
 - **実行コマンド**: `pnpm test:run`
-- テストファイルは `__tests__/` ディレクトリに配置
+- **配置**: 各モジュール内の `__tests__/` ディレクトリ
+- **命名規則**: `*.test.ts`
+
+#### E2Eテスト（Playwright）
+- **実行コマンド**: `pnpm e2e`（UIモード: `pnpm e2e:ui`）
+- **配置**: `e2e/` ディレクトリ
+- **命名規則**:
+  - `*.spec.ts`: 通常のE2Eテスト（Chromiumで実行）
+  - `*.smoke.spec.ts`: スモークテスト（Chromium + WebKitで実行）
+  - `*.mobile.spec.ts`: モバイルテスト（iPhone SE/14で実行）
+- **セットアップ**: `SETUP.md` の「E2Eテスト（Playwright）」セクション参照
 
 ## Phase 1 実装ロードマップ
 
