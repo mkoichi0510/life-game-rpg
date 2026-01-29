@@ -1,5 +1,6 @@
 node_modules/*
 .env
+.env.e2e
 .next/
 .DS_Store
 /build/

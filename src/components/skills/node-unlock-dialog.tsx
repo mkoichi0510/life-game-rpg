@@ -46,7 +46,7 @@ export function NodeUnlockDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" data-testid="skill-unlock-dialog">
         <DialogHeader>
           <DialogTitle>{node.title}</DialogTitle>
           <DialogDescription>説明は未登録です</DialogDescription>
@@ -82,6 +82,7 @@ export function NodeUnlockDialog({
             variant="xp"
             onClick={onUnlock}
             disabled={!canUnlock || unlocking}
+            data-testid="skill-unlock-submit"
           >
             {unlocking ? "解放中..." : "解放する"}
           </Button>

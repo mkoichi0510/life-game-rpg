@@ -216,6 +216,7 @@ export default function PlayPage() {
                     setSelectedCategoryId(category.id);
                     setErrors((prev) => ({ ...prev, category: undefined }));
                   }}
+                  data-testid={`play-category-${category.id}`}
                   className={cn(
                     "relative flex w-full items-center justify-between rounded-lg border p-4 text-left transition",
                     isSelected
@@ -300,6 +301,7 @@ export default function PlayPage() {
                     setSelectedActionId(action.id);
                     setErrors((prev) => ({ ...prev, action: undefined }));
                   }}
+                  data-testid={`play-action-${action.id}`}
                   className={cn(
                     "flex w-full items-center justify-between rounded-md border px-4 py-3 text-left text-sm transition",
                     isSelected
@@ -338,6 +340,7 @@ export default function PlayPage() {
             maxLength={NOTE_MAX_LENGTH}
             rows={4}
             placeholder="今日やったことをメモできます"
+            data-testid="play-note"
             className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           />
           <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -376,7 +379,7 @@ export default function PlayPage() {
       </div>
 
       {success && (
-        <Card className="border-emerald-200 bg-emerald-50/60">
+        <Card className="border-emerald-200 bg-emerald-50/60" data-testid="play-success">
           <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-white">
@@ -419,6 +422,7 @@ export default function PlayPage() {
           onClick={handleSubmit}
           disabled={submitting || !selectedCategoryId || !selectedActionId}
           className="w-full sm:w-auto"
+          data-testid="play-submit"
         >
           {submitting ? (
             <>

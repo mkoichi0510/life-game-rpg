@@ -178,6 +178,34 @@ npm run dev
 
 「Life Game RPG」のページが表示されれば成功です！
 
+## E2Eテスト（Playwright）
+
+### 事前準備
+
+```bash
+cp .env.e2e.example .env.e2e
+```
+
+`.env.e2e`の`DATABASE_URL`をE2E用のDBに向けてください。
+
+### Playwrightブラウザのインストール
+
+```bash
+pnpm e2e:install
+```
+
+### E2E実行
+
+```bash
+pnpm e2e
+```
+
+UIモードで実行する場合：
+
+```bash
+pnpm e2e:ui
+```
+
 ## その他の便利なコマンド
 
 ### Prisma Studioでデータを確認

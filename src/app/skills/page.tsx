@@ -307,6 +307,7 @@ export default function SkillsPage() {
                   key={category.id}
                   type="button"
                   onClick={() => handleCategorySelect(category.id)}
+                  data-testid={`skill-category-${category.id}`}
                   className={cn(
                     "flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition",
                     isActive
@@ -364,6 +365,7 @@ export default function SkillsPage() {
                   key={tree.id}
                   type="button"
                   onClick={() => handleTreeSelect(tree.id)}
+                  data-testid={`skill-tree-${tree.id}`}
                   className={cn(
                     "flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition",
                     isActive

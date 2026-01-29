@@ -38,6 +38,7 @@ export const SkillNodeItem = forwardRef<HTMLButtonElement, SkillNodeProps>(
           aria-disabled={!isUnlockable && !isUnlocked}
           aria-label={`${node.title}、${stateLabel}`}
           onClick={() => onActivate(node)}
+          data-testid={`skill-node-${node.id}`}
           className={cn(
             "flex min-h-[48px] w-full items-center gap-3 rounded-lg border px-4 py-3 text-left text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
             isSelected && "ring-2 ring-ring ring-offset-2",
