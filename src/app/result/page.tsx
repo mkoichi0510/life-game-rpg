@@ -298,7 +298,7 @@ export default function ResultPage() {
             まだプレイが記録されていません。
           </p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3" data-testid="playlog-list">
             {visiblePlayLogs.map((log) => {
               const color = getCategoryColor(log.action.category);
               const Icon = getCategoryIcon(log.action.category);
@@ -343,6 +343,7 @@ export default function ResultPage() {
                         setDeleteConfirmOpen(true);
                       }}
                       disabled={isDeleting}
+                      data-testid={`playlog-delete-${log.id}`}
                     >
                       {isDeleting ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -368,6 +369,7 @@ export default function ResultPage() {
           variant={isConfirmed ? "secondary" : "confirm"}
           size="lg"
           disabled={loading || isConfirmed}
+          data-testid="result-confirm"
         >
           {loading ? (
             <span className="flex items-center gap-2">
@@ -416,6 +418,7 @@ export default function ResultPage() {
             type="button"
             onClick={handleConfirm}
             disabled={confirming}
+            data-testid="result-confirm-submit"
           >
             {confirming ? (
               <span className="flex items-center gap-2">
@@ -461,6 +464,7 @@ export default function ResultPage() {
             variant="destructive"
             type="button"
             onClick={handleDeleteConfirm}
+            data-testid="playlog-delete-confirm"
           >
             削除する
           </Button>
@@ -485,6 +489,7 @@ export default function ResultPage() {
           </div>
         </div>
         <Badge
+          data-testid="result-status"
           className={cn(
             "border px-3 py-1 text-xs font-semibold",
             isConfirmed
