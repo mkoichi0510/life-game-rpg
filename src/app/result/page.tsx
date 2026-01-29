@@ -335,16 +335,16 @@ export default function ResultPage() {
                     </div>
                   </div>
                   {!isConfirmed && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setDeleteTargetId(log.id);
-                      setDeleteConfirmOpen(true);
-                    }}
-                    disabled={isDeleting}
-                    data-testid={`playlog-delete-${log.id}`}
-                  >
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setDeleteTargetId(log.id);
+                        setDeleteConfirmOpen(true);
+                      }}
+                      disabled={isDeleting}
+                      data-testid={`playlog-delete-${log.id}`}
+                    >
                       {isDeleting ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (

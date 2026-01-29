@@ -135,25 +135,25 @@ export default async function Home() {
             </div>
           </div>
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Button asChild size="lg" className="shadow-sm">
-            <Link href="/play" data-testid="home-play">
-              プレイを記録する
-            </Link>
-          </Button>
-          {!isConfirmed && (
-            <Button variant="confirm" asChild size="lg" className="shadow-sm">
-              <Link href="/result" data-testid="home-confirm">
-                今日を確定する
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button asChild size="lg" className="shadow-sm">
+              <Link href="/play" data-testid="home-play">
+                プレイを記録する
               </Link>
             </Button>
-          )}
-          <Button variant="outline" asChild size="lg">
-            <Link href="/skills" data-testid="home-skills">
-              スキルツリーを見る
-            </Link>
-          </Button>
-        </div>
+            {!isConfirmed && (
+              <Button variant="confirm" asChild size="lg" className="shadow-sm">
+                <Link href="/result" data-testid="home-confirm">
+                  今日を確定する
+                </Link>
+              </Button>
+            )}
+            <Button variant="outline" asChild size="lg">
+              <Link href="/skills" data-testid="home-skills">
+                スキルツリーを見る
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {/* カテゴリ別XP */}
