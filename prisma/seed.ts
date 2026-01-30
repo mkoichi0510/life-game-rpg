@@ -36,11 +36,11 @@ async function main() {
 
   // 健康カテゴリのアクション
   const healthActions = [
-    { label: '筋トレ（上半身）', order: 1 },
-    { label: '筋トレ（下半身）', order: 2 },
-    { label: '有酸素運動（30分以上）', order: 3 },
-    { label: 'ストレッチ', order: 4 },
-    { label: '早寝早起き', order: 5 },
+    { label: '筋トレ（上半身）', order: 1, unit: '回' },
+    { label: '筋トレ（下半身）', order: 2, unit: '回' },
+    { label: '有酸素運動（30分以上）', order: 3, unit: '分' },
+    { label: 'ストレッチ', order: 4, unit: '分' },
+    { label: '早寝早起き', order: 5, unit: null },
   ]
 
   for (const action of healthActions) {
@@ -51,6 +51,7 @@ async function main() {
         id: `health-${action.order}`,
         categoryId: healthCategory.id,
         label: action.label,
+        unit: action.unit,
         visible: true,
         order: action.order,
       },
@@ -59,11 +60,11 @@ async function main() {
 
   // 資格・学習カテゴリのアクション
   const certActions = [
-    { label: '教材・参考書学習', order: 1 },
-    { label: 'オンライン講座視聴', order: 2 },
-    { label: '問題演習', order: 3 },
-    { label: '模擬試験', order: 4 },
-    { label: '復習・まとめ作成', order: 5 },
+    { label: '教材・参考書学習', order: 1, unit: '分' },
+    { label: 'オンライン講座視聴', order: 2, unit: '分' },
+    { label: '問題演習', order: 3, unit: '問' },
+    { label: '模擬試験', order: 4, unit: null },
+    { label: '復習・まとめ作成', order: 5, unit: '分' },
   ]
 
   for (const action of certActions) {
@@ -74,6 +75,7 @@ async function main() {
         id: `cert-${action.order}`,
         categoryId: certificationCategory.id,
         label: action.label,
+        unit: action.unit,
         visible: true,
         order: action.order,
       },

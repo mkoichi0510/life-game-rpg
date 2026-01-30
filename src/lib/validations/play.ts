@@ -11,6 +11,11 @@ export const createPlaySchema = z.object({
     .string({ required_error: 'アクションIDは必須です' })
     .trim()
     .min(1, 'アクションIDは必須です'),
+  quantity: z
+    .number({ invalid_type_error: '数量は整数で指定してください' })
+    .int('数量は整数で指定してください')
+    .positive('数量は正の整数で指定してください')
+    .optional(),
   note: z
     .string()
     .optional()

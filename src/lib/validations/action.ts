@@ -21,6 +21,14 @@ export const createActionSchema = z.object({
     .min(1, 'アクション名は必須です')
     .max(50, 'アクション名は最大50文字までです')
     .transform((v) => v.trim()),
+  unit: z
+    .string()
+    .max(10, '単位は最大10文字までです')
+    .optional()
+    .transform((v) => {
+      const trimmed = v?.trim()
+      return trimmed && trimmed.length > 0 ? trimmed : undefined
+    }),
   visible: z.boolean().optional().default(true),
   order: z
     .number({ invalid_type_error: '表示順序は整数で指定してください' })

@@ -37,6 +37,7 @@ model Action {
   id         String   @id @default(cuid())
   categoryId String
   label      String
+  unit       String?  // 単位（例: "回", "分", "km"）
   visible    Boolean  @default(true)
   order      Int      @default(0)
   createdAt  DateTime @default(now())
@@ -54,6 +55,7 @@ model PlayLog {
   at       DateTime @default(now()) // ISO datetime
   dayKey   String   // YYYY-MM-DD（ローカル）
   actionId String
+  quantity Int?     // 数量（例: 30, 100）
   note     String?
   createdAt DateTime @default(now())
 

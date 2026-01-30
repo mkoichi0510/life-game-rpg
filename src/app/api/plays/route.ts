@@ -118,6 +118,7 @@ export async function POST(request: NextRequest) {
           at: now,
           dayKey: targetDayKey,
           actionId: action.id,
+          quantity: result.data.quantity,
           note: result.data.note,
         },
         include: playLogInclude,
