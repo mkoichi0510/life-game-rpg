@@ -340,6 +340,36 @@ describe('POST /api/actions', () => {
     expect(data.error.details.field).toBe('unit')
   })
 
+  it('should convert empty string unit to undefined', async () => {
+    const mockAction = {
+      id: 'action-empty-unit',
+      categoryId: 'cat-1',
+      label: 'Empty unit action',
+      unit: null,
+      visible: true,
+      order: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+
+    vi.mocked(prisma.category.findUnique).mockResolvedValue({ id: 'cat-1' })
+    vi.mocked(prisma.action.create).mockResolvedValue(mockAction)
+
+    const request = createRequest({
+      categoryId: 'cat-1',
+      label: 'Empty unit action',
+      unit: '',
+    })
+    const response = await POST(request)
+
+    expect(response.status).toBe(201)
+    expect(prisma.action.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        unit: undefined,
+      }),
+    })
+  })
+
   it('should return 404 when category does not exist', async () => {
     vi.mocked(prisma.category.findUnique).mockResolvedValue(null)
 

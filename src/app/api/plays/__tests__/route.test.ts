@@ -210,6 +210,33 @@ describe('POST /api/plays', () => {
     expect(data.error.details.field).toBe('quantity')
   })
 
+  it('should return 400 when quantity is zero', async () => {
+    const mockAction = {
+      id: 'action-1',
+      categoryId: 'cat-1',
+      unit: '回',
+      category: {
+        id: 'cat-1',
+        xpPerPlay: 10,
+        xpPerSp: 20,
+      },
+    }
+
+    vi.mocked(prisma.action.findUnique).mockResolvedValue(mockAction)
+    vi.mocked(prisma.dailyResult.findUnique).mockResolvedValue({
+      status: 'draft',
+    })
+
+    const request = createPostRequest({ actionId: 'action-1', quantity: 0 })
+    const response = await POST(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(data.error.code).toBe('VALIDATION_ERROR')
+    expect(data.error.details.field).toBe('quantity')
+    expect(data.error.details.reason).toContain('1')
+  })
+
   it('should store quantity when provided', async () => {
     const mockAction = {
       id: 'action-1',
