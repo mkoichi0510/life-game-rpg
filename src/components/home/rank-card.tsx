@@ -59,7 +59,7 @@ export function RankCard({
         <TooltipTrigger asChild>
           <button
             type="button"
-            className="w-full text-left"
+            className="w-full text-left rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label={`${categoryName}ランク詳細を開く`}
             aria-haspopup="dialog"
             onClick={() => setOpen(true)}

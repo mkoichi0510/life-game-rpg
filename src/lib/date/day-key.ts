@@ -4,6 +4,7 @@
  */
 
 import { formatInTimeZone } from "date-fns-tz";
+
 import { DEFAULT_TIMEZONE } from "./timezone";
 
 /**
@@ -95,4 +96,30 @@ export function getRecentDayKeys(days: number): string[] {
  */
 export function parseDayKey(dayKey: string): Date {
   return new Date(`${dayKey}T00:00:00+09:00`);
+}
+
+/**
+ * ランク集計期間を「M/d - M/d」形式でフォーマット
+ * @param rankWindowDays - 集計期間日数（0以下の場合は「-」を返す）
+ * @returns フォーマットされた期間文字列
+ */
+export function formatRankWindowRange(rankWindowDays: number): string {
+  if (rankWindowDays <= 0) return "-";
+
+  const dayKeys = getRecentDayKeys(rankWindowDays);
+  if (dayKeys.length === 0) return "-";
+
+  const startKey = dayKeys[dayKeys.length - 1];
+  const endKey = dayKeys[0];
+  const startLabel = formatInTimeZone(
+    parseDayKey(startKey),
+    DEFAULT_TIMEZONE,
+    "M/d"
+  );
+  const endLabel = formatInTimeZone(
+    parseDayKey(endKey),
+    DEFAULT_TIMEZONE,
+    "M/d"
+  );
+  return `${startLabel} - ${endLabel}`;
 }

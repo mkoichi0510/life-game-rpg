@@ -12,9 +12,8 @@ import { CATEGORY_COLORS, DAILY_RESULT_STATUS } from "@/lib/constants";
 import { getCategoryColorKey } from "@/lib/category-ui";
 import {
   DEFAULT_TIMEZONE,
-  getRecentDayKeys,
+  formatRankWindowRange,
   getTodayKey,
-  parseDayKey,
 } from "@/lib/date";
 import {
   fetchCategories,
@@ -29,27 +28,6 @@ function formatTodayLabel(date = new Date()): string {
   return formatInTimeZone(date, DEFAULT_TIMEZONE, "yyyy年M月d日（EEE）", {
     locale: ja,
   });
-}
-
-function formatRankWindowRange(rankWindowDays: number): string {
-  if (rankWindowDays <= 0) return "-";
-
-  const dayKeys = getRecentDayKeys(rankWindowDays);
-  if (dayKeys.length === 0) return "-";
-
-  const startKey = dayKeys[dayKeys.length - 1];
-  const endKey = dayKeys[0];
-  const startLabel = formatInTimeZone(
-    parseDayKey(startKey),
-    DEFAULT_TIMEZONE,
-    "M/d"
-  );
-  const endLabel = formatInTimeZone(
-    parseDayKey(endKey),
-    DEFAULT_TIMEZONE,
-    "M/d"
-  );
-  return `${startLabel} - ${endLabel}`;
 }
 
 export default async function Home() {
