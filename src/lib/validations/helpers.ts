@@ -20,6 +20,22 @@ export function formatZodError(error: ZodError) {
   )
 }
 
+export function formatFieldError(field: string, reason: string) {
+  return NextResponse.json(
+    {
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: '入力値が不正です',
+        details: {
+          field,
+          reason,
+        },
+      },
+    },
+    { status: 400 }
+  )
+}
+
 export function formatNotFoundError(resource: string, id: string) {
   return NextResponse.json(
     {

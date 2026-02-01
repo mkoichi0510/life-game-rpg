@@ -69,6 +69,7 @@ describe('GET /api/plays', () => {
           id: 'action-1',
           label: 'テスト',
           categoryId: 'cat-1',
+          unit: null,
           category: { id: 'cat-1', name: 'カテゴリ' },
         },
       },
@@ -104,6 +105,7 @@ describe('GET /api/plays', () => {
           id: 'action-1',
           label: 'テスト',
           categoryId: 'cat-1',
+          unit: null,
           category: { id: 'cat-1', name: 'カテゴリ' },
         },
       },
@@ -156,6 +158,115 @@ describe('POST /api/plays', () => {
     expect(data.error.code).toBe('NOT_FOUND')
   })
 
+  it('should return 400 when quantity is missing for unit action', async () => {
+    const mockAction = {
+      id: 'action-1',
+      categoryId: 'cat-1',
+      unit: '回',
+      category: {
+        id: 'cat-1',
+        xpPerPlay: 10,
+        xpPerSp: 20,
+      },
+    }
+
+    vi.mocked(prisma.action.findUnique).mockResolvedValue(mockAction)
+    vi.mocked(prisma.dailyResult.findUnique).mockResolvedValue({
+      status: 'draft',
+    })
+
+    const request = createPostRequest({ actionId: 'action-1' })
+    const response = await POST(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(data.error.code).toBe('VALIDATION_ERROR')
+    expect(data.error.details.field).toBe('quantity')
+  })
+
+  it('should return 400 when quantity is provided for action without unit', async () => {
+    const mockAction = {
+      id: 'action-1',
+      categoryId: 'cat-1',
+      unit: null,
+      category: {
+        id: 'cat-1',
+        xpPerPlay: 10,
+        xpPerSp: 20,
+      },
+    }
+
+    vi.mocked(prisma.action.findUnique).mockResolvedValue(mockAction)
+    vi.mocked(prisma.dailyResult.findUnique).mockResolvedValue({
+      status: 'draft',
+    })
+
+    const request = createPostRequest({ actionId: 'action-1', quantity: 3 })
+    const response = await POST(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(data.error.code).toBe('VALIDATION_ERROR')
+    expect(data.error.details.field).toBe('quantity')
+  })
+
+  it('should store quantity when provided', async () => {
+    const mockAction = {
+      id: 'action-1',
+      categoryId: 'cat-1',
+      unit: '回',
+      category: {
+        id: 'cat-1',
+        xpPerPlay: 10,
+        xpPerSp: 20,
+      },
+    }
+
+    const tx = {
+      dailyResult: { upsert: vi.fn() },
+      playLog: { create: vi.fn() },
+      dailyCategoryResult: {
+        findUnique: vi.fn(),
+        update: vi.fn(),
+        create: vi.fn(),
+      },
+    }
+
+    vi.mocked(prisma.action.findUnique).mockResolvedValue(mockAction)
+    vi.mocked(prisma.dailyResult.findUnique).mockResolvedValue({
+      status: 'draft',
+    })
+    vi.mocked(prisma.$transaction).mockImplementation(async (cb) => cb(tx))
+
+    tx.playLog.create.mockResolvedValue({
+      id: 'play-1',
+      dayKey: '2026-01-24',
+      at: new Date(),
+      actionId: 'action-1',
+      note: null,
+      quantity: 5,
+      createdAt: new Date(),
+      action: {
+        id: 'action-1',
+        label: 'テスト',
+        categoryId: 'cat-1',
+        unit: '回',
+        category: { id: 'cat-1', name: 'カテゴリ' },
+      },
+    })
+    tx.dailyCategoryResult.findUnique.mockResolvedValue({ id: 'dcr-1', playCount: 0 })
+
+    const request = createPostRequest({ actionId: 'action-1', quantity: 5 })
+    const response = await POST(request)
+
+    expect(response.status).toBe(201)
+    expect(tx.playLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ quantity: 5 }),
+      })
+    )
+  })
+
   it('should register play for next day when today is confirmed', async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-01-24T12:00:00Z'))
@@ -163,6 +274,7 @@ describe('POST /api/plays', () => {
     const mockAction = {
       id: 'action-1',
       categoryId: 'cat-1',
+      unit: null,
       category: {
         id: 'cat-1',
         xpPerPlay: 10,
@@ -197,6 +309,7 @@ describe('POST /api/plays', () => {
         id: 'action-1',
         label: 'テスト',
         categoryId: 'cat-1',
+        unit: null,
         category: { id: 'cat-1', name: 'カテゴリ' },
       },
     })

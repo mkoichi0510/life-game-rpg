@@ -41,6 +41,7 @@ describe('GET /api/actions', () => {
         id: 'action-1',
         categoryId: 'cat-1',
         label: 'アクション1',
+        unit: null,
         visible: true,
         order: 1,
         createdAt: new Date(),
@@ -50,6 +51,7 @@ describe('GET /api/actions', () => {
         id: 'action-2',
         categoryId: 'cat-1',
         label: 'アクション2',
+        unit: null,
         visible: true,
         order: 2,
         createdAt: new Date(),
@@ -82,6 +84,7 @@ describe('GET /api/actions', () => {
         id: 'action-1',
         categoryId: 'cat-1',
         label: 'アクション1',
+        unit: null,
         visible: true,
         order: 1,
         createdAt: new Date(),
@@ -186,6 +189,7 @@ describe('POST /api/actions', () => {
       id: 'action-1',
       categoryId: 'cat-1',
       label: '新しいアクション',
+      unit: null,
       visible: true,
       order: 0,
       createdAt: new Date(),
@@ -208,6 +212,7 @@ describe('POST /api/actions', () => {
       id: 'action-2',
       categoryId: 'cat-1',
       label: 'カスタムアクション',
+      unit: '回',
       visible: false,
       order: 5,
       createdAt: new Date(),
@@ -220,6 +225,7 @@ describe('POST /api/actions', () => {
     const request = createRequest({
       categoryId: 'cat-1',
       label: 'カスタムアクション',
+      unit: '回',
       visible: false,
       order: 5,
     })
@@ -231,6 +237,7 @@ describe('POST /api/actions', () => {
       data: {
         categoryId: 'cat-1',
         label: 'カスタムアクション',
+        unit: '回',
         visible: false,
         order: 5,
       },
@@ -294,6 +301,7 @@ describe('POST /api/actions', () => {
       id: 'action-trim',
       categoryId: 'cat-1',
       label: 'トリムされたアクション',
+      unit: null,
       visible: true,
       order: 0,
       createdAt: new Date(),
@@ -315,6 +323,21 @@ describe('POST /api/actions', () => {
         label: 'トリムされたアクション',
       }),
     })
+  })
+
+  it('should return 400 when unit is too long', async () => {
+    const longUnit = 'a'.repeat(21)
+    const request = createRequest({
+      categoryId: 'cat-1',
+      label: 'test',
+      unit: longUnit,
+    })
+    const response = await POST(request)
+    const data = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(data.error.code).toBe('VALIDATION_ERROR')
+    expect(data.error.details.field).toBe('unit')
   })
 
   it('should return 404 when category does not exist', async () => {

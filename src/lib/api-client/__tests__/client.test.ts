@@ -92,13 +92,17 @@ describe("createPlay", () => {
     const payload = { playLog: { id: "p1" } };
     mockFetch.mockResolvedValue(jsonResponse(payload));
 
-    const result = await createPlay({ actionId: "a1", note: "test" });
+    const result = await createPlay({ actionId: "a1", note: "test", quantity: 3 });
 
     const [url, init] = mockFetch.mock.calls[0];
     expect(url).toBe("/api/plays");
     expect(init.method).toBe("POST");
     expect(init.headers["Content-Type"]).toBe("application/json");
-    expect(JSON.parse(init.body)).toEqual({ actionId: "a1", note: "test" });
+    expect(JSON.parse(init.body)).toEqual({
+      actionId: "a1",
+      note: "test",
+      quantity: 3,
+    });
     expect(result).toEqual(payload);
   });
 });
