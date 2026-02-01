@@ -43,6 +43,8 @@ export async function registerPlay(
     await quantityInput.fill(String(quantity ?? 1));
   }
   if (note) {
+    await page.getByTestId("play-note-toggle").click();
+    await expect(page.getByTestId("play-note")).toBeVisible();
     await page.getByTestId("play-note").fill(note);
   }
   const submitButton = page.getByTestId("play-submit");
