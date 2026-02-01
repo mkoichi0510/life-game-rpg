@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getCategoryIcon } from "@/lib/category-ui";
@@ -51,7 +50,7 @@ export function RankCard({
       <CardHeader className="space-y-3 pb-3">
         <div className="flex items-center gap-3">
           <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-muted/40">
-            <CategoryIcon className={cn("h-5 w-5", colorClasses.text)} />
+            <CategoryIcon className={cn("h-5 w-5", colorClasses.text)} aria-hidden="true" />
             <span
               className={cn(
                 "absolute inset-0 rounded-full opacity-20",
@@ -67,7 +66,7 @@ export function RankCard({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-amber-500" />
+          <Trophy className="h-5 w-5 text-amber-500" aria-hidden="true" />
           <p className="text-xs text-muted-foreground">現在のランク</p>
         </div>
         <p className="text-lg font-bold tracking-tight sm:text-xl">
@@ -95,13 +94,14 @@ export function RankCard({
                 : "最高ランク"}
             </span>
           </div>
-          <TooltipProvider>
-            <Tooltip>
+          {/* 親コンポーネントで TooltipProvider のラップが必要 */}
+          <Tooltip>
               <TooltipTrigger asChild>
                 <div
                   role="progressbar"
                   aria-valuenow={weekSp}
                   aria-valuemin={0}
+                  // 最小値 1 を設定してゼロ除算を防止
                   aria-valuemax={Math.max(nextRankSp, weekSp, 1)}
                   className="relative h-2.5 w-full overflow-hidden rounded-full bg-muted/50"
                 >
@@ -130,8 +130,7 @@ export function RankCard({
                   </p>
                 </div>
               </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          </Tooltip>
         </div>
       </CardContent>
     </Card>
