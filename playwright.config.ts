@@ -23,7 +23,7 @@ export default defineConfig({
   webServer: {
     command: "pnpm e2e:db:reset && pnpm next build --webpack && pnpm start",
     url: baseURL,
-    reuseExistingServer: false,
+    reuseExistingServer: process.env.CI !== "true",
     env: {
       ...process.env,
       DATABASE_URL: process.env.DATABASE_URL,

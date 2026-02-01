@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { getCategoryColor, getCategoryIcon } from "@/lib/category-ui";
 import { DAILY_RESULT_STATUS } from "@/lib/constants";
 import { parseDayKey, DEFAULT_TIMEZONE } from "@/lib/date";
+import { formatPlayLabel } from "@/lib/format";
 import { useTodayKey } from "@/lib/hooks/use-today-key";
 import { showDayConfirmed, showError } from "@/lib/toast";
 import {
@@ -307,10 +308,11 @@ export default function ResultPage() {
                   .xpPerPlay ?? null;
               const isDeleting = deletingIds.has(log.id);
 
-              const playLabel =
-                log.quantity != null && log.action.unit
-                  ? `${log.action.label} × ${log.quantity}${log.action.unit}`
-                  : log.action.label;
+              const playLabel = formatPlayLabel(
+                log.action.label,
+                log.quantity,
+                log.action.unit
+              );
 
               return (
                 <div
