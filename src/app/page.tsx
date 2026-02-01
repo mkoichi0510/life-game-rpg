@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { formatInTimeZone } from "date-fns-tz";
 import { ja } from "date-fns/locale";
-import { Zap, Sparkles, Trophy, TrendingUp } from "lucide-react";
+import { Zap, Sparkles, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { RankCard } from "@/components/home/rank-card";
 import { cn } from "@/lib/utils";
-import { calculateXpProgressPercent, calculateXpUntilNextSp } from "@/lib/calculation";
 import { CATEGORY_COLORS, DAILY_RESULT_STATUS } from "@/lib/constants";
 import { getCategoryColorKey } from "@/lib/category-ui";
 import { DEFAULT_TIMEZONE, getTodayKey } from "@/lib/date";
@@ -15,7 +15,7 @@ import {
   fetchCategories,
   fetchCurrentSeasonalTitle,
   fetchDailyResult,
-  fetchPlayerStates,
+  fetchSeasonalTitles,
 } from "@/lib/api-client";
 
 export const dynamic = "force-dynamic";
@@ -26,48 +26,35 @@ function formatTodayLabel(date = new Date()): string {
   });
 }
 
-function getRankBadgeStyles(rankLabel: string | undefined): string {
-  if (!rankLabel) return "bg-secondary text-secondary-foreground";
-
-  if (rankLabel.includes("ストイック")) {
-    return "bg-gradient-to-r from-amber-400 to-yellow-500 text-amber-950 shadow-md";
-  }
-  if (rankLabel.includes("アクティブ")) {
-    return "bg-gradient-to-r from-emerald-400 to-green-500 text-emerald-950 shadow-sm";
-  }
-  if (rankLabel.includes("習慣")) {
-    return "bg-gradient-to-r from-blue-400 to-blue-500 text-blue-950";
-  }
-  return "bg-secondary text-secondary-foreground";
-}
-
 export default async function Home() {
   const todayKey = getTodayKey();
-  const [categoriesResponse, dailyResultResponse, playerStatesResponse] =
-    await Promise.all([
-      fetchCategories(true),
-      fetchDailyResult(todayKey),
-      fetchPlayerStates(),
-    ]);
+  const [categoriesResponse, dailyResultResponse] = await Promise.all([
+    fetchCategories(true),
+    fetchDailyResult(todayKey),
+  ]);
 
   const categories = categoriesResponse.categories
     .slice()
     .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
   const dailyResult = dailyResultResponse.dailyResult;
   const dailyCategoryResults = dailyResultResponse.categoryResults;
-  const playerStates = playerStatesResponse.playerStates;
-
   const categoryResultMap = new Map(
     dailyCategoryResults.map((result) => [result.categoryId, result])
-  );
-  const playerStateMap = new Map(
-    playerStates.map((state) => [state.categoryId, state])
   );
 
   const seasonalTitleEntries = await Promise.all(
     categories.map(async (category) => {
-      const seasonalTitle = await fetchCurrentSeasonalTitle(category.id);
-      return [category.id, seasonalTitle] as const;
+      const [current, titlesResponse] = await Promise.all([
+        fetchCurrentSeasonalTitle(category.id),
+        fetchSeasonalTitles(category.id),
+      ]);
+      return [
+        category.id,
+        {
+          current,
+          titles: titlesResponse.titles,
+        },
+      ] as const;
     })
   );
   const seasonalTitleMap = new Map(seasonalTitleEntries);
@@ -228,212 +215,56 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* カテゴリ別サマリーセクション */}
+      {/* ランクカードセクション */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold tracking-tight">カテゴリ別サマリー</h3>
-          <p className="text-xs text-muted-foreground">
-            今日の進捗と累計状態
-          </p>
-        </div>
-        <div className="grid gap-4">
-          {categories.length === 0 ? (
-            <Card>
-              <CardContent className="py-6 text-sm text-muted-foreground">
-                カテゴリが登録されるとここにサマリーが表示されます。
-              </CardContent>
-            </Card>
-          ) : (
-            categories.map((category) => {
-              const categoryResult = categoryResultMap.get(category.id);
-              const playerState = playerStateMap.get(category.id);
-              const seasonalTitle = seasonalTitleMap.get(category.id);
-              const colorKey = getCategoryColorKey(category);
-              const colorClasses = CATEGORY_COLORS[colorKey];
-
-              const playCount = categoryResult?.playCount ?? 0;
-              const todayXp = categoryResult?.xpEarned ?? 0;
-              const xpTotal = playerState?.xpTotal ?? 0;
-              const spUnspent = playerState?.spUnspent ?? 0;
-              const xpUntilNextSp = calculateXpUntilNextSp(
-                xpTotal,
-                category.xpPerSp
-              );
-              const xpProgressPercent = calculateXpProgressPercent(
-                xpTotal,
-                category.xpPerSp
-              );
-
-              return (
-                <Card
-                  key={category.id}
-                  className={cn(
-                    "overflow-hidden border-l-4 transition-all hover:shadow-md",
-                    colorClasses.border
-                  )}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="relative">
-                          <span
-                            className={cn(
-                              "block h-3 w-3 rounded-full",
-                              colorClasses.bg
-                            )}
-                          />
-                          <span
-                            className={cn(
-                              "absolute -inset-0.5 rounded-full opacity-30",
-                              colorClasses.bg
-                            )}
-                          />
-                        </span>
-                        <CardTitle className="text-lg font-bold">
-                          {category.name}
-                        </CardTitle>
-                      </div>
-                      <Badge
-                        className={cn(
-                          "text-xs font-semibold",
-                          getRankBadgeStyles(seasonalTitle?.currentTitle?.label)
-                        )}
-                      >
-                        {seasonalTitle?.currentTitle?.label ?? "未設定"}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Zap className="h-3 w-3" />
-                      <span>今日のプレイ: {playCount}回</span>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* 今日の獲得XP - 強調表示 */}
-                    <div className="flex items-center justify-between rounded-lg bg-xp-glow p-3">
-                      <span className="text-sm text-muted-foreground">
-                        {isConfirmed ? "今日の獲得XP" : "未確定XP"}
-                      </span>
-                      <span className="text-xl font-bold text-xp-gradient">
-                        +{todayXp} XP
-                      </span>
-                    </div>
-
-                    <div className="grid gap-3 text-sm sm:grid-cols-2">
-                      <div className="rounded-md border bg-muted/30 p-3">
-                        <p className="text-xs text-muted-foreground">累計XP</p>
-                        <p className="mt-1 text-lg font-bold">{xpTotal} XP</p>
-                      </div>
-                      <div className="rounded-md bg-sp-glow p-3">
-                        <p className="text-xs text-muted-foreground">未使用SP</p>
-                        <p className="mt-1 text-lg font-bold text-sp-gradient">{spUnspent} SP</p>
-                      </div>
-                    </div>
-
-                    {/* 次SP獲得プログレス */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Sparkles className="h-3 w-3 text-violet-500" />
-                          次SP獲得まで
-                        </span>
-                        <span className="font-medium text-foreground">あと {xpUntilNextSp} XP</span>
-                      </div>
-                      <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-muted/50">
-                        <div
-                          className="shimmer h-full rounded-full bg-gradient-to-r from-violet-500 to-purple-500 transition-all duration-500 ease-out"
-                          style={{ width: `${xpProgressPercent}%` }}
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent" />
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })
-          )}
-        </div>
-      </section>
-
-      {/* 週ランクセクション */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-amber-500" />
-            <h3 className="text-lg font-bold tracking-tight">週ランク</h3>
-          </div>
+          <h3 className="text-lg font-bold tracking-tight">週ランク</h3>
           <p className="text-xs text-muted-foreground">直近の称号と週実績</p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {categories.length === 0 ? (
-            <Card>
-              <CardContent className="py-6 text-sm text-muted-foreground">
-                週ランクはカテゴリ登録後に表示されます。
-              </CardContent>
-            </Card>
-          ) : (
-            categories.map((category) => {
-              const seasonalTitle = seasonalTitleMap.get(category.id);
-              const colorKey = getCategoryColorKey(category);
-              const colorClasses = CATEGORY_COLORS[colorKey];
-              const totalSpEarned = seasonalTitle?.totalSpEarned ?? 0;
-              const weeklyXp = totalSpEarned * category.xpPerSp;
-              const rankLabel = seasonalTitle?.currentTitle?.label;
+        <TooltipProvider>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {categories.length === 0 ? (
+              <Card>
+                <CardContent className="py-6 text-sm text-muted-foreground">
+                  週ランクはカテゴリ登録後に表示されます。
+                </CardContent>
+              </Card>
+            ) : (
+              categories.map((category) => {
+                const seasonalData = seasonalTitleMap.get(category.id);
+                const colorKey = getCategoryColorKey(category);
+                const titlesSorted = (seasonalData?.titles ?? [])
+                  .slice()
+                  .sort(
+                    (a, b) =>
+                      a.minSpEarned - b.minSpEarned || a.order - b.order
+                  );
+                const weekSp = seasonalData?.current?.totalSpEarned ?? 0;
+                const weekXp = weekSp * category.xpPerSp;
+                const rankName =
+                  seasonalData?.current?.currentTitle?.label ?? null;
+                const nextTitle =
+                  titlesSorted.find((title) => title.minSpEarned > weekSp) ?? null;
+                const nextRankName = nextTitle?.label ?? null;
+                const nextRankSp = nextTitle?.minSpEarned ?? 0;
 
-              return (
-                <Card
-                  key={category.id}
-                  className="overflow-hidden transition-all hover:shadow-md"
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="relative">
-                          <span
-                            className={cn(
-                              "block h-3 w-3 rounded-full",
-                              colorClasses.bg
-                            )}
-                          />
-                          <span
-                            className={cn(
-                              "absolute -inset-0.5 rounded-full opacity-30",
-                              colorClasses.bg
-                            )}
-                          />
-                        </span>
-                        <CardTitle className="text-base font-bold">
-                          {category.name}
-                        </CardTitle>
-                      </div>
-                      <Badge
-                        className={cn(
-                          "animate-badge-pop text-xs font-semibold",
-                          getRankBadgeStyles(rankLabel)
-                        )}
-                      >
-                        {rankLabel ?? "未設定"}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-sm">
-                    <div className="flex items-center justify-between rounded-md bg-sp-glow p-2">
-                      <span className="text-muted-foreground">週SP</span>
-                      <span className="text-lg font-bold text-sp-gradient">{totalSpEarned} SP</span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-md bg-xp-glow p-2">
-                      <span className="text-muted-foreground">週XP</span>
-                      <span className="text-lg font-bold text-xp-gradient">{weeklyXp} XP</span>
-                    </div>
-                    <p className="text-center text-xs text-muted-foreground">
-                      直近{category.rankWindowDays}日間の集計
-                    </p>
-                  </CardContent>
-                </Card>
-              );
-            })
-          )}
-        </div>
+                return (
+                  <RankCard
+                    key={category.id}
+                    categoryId={category.id}
+                    categoryName={category.name}
+                    categoryColor={colorKey}
+                    rankName={rankName}
+                    nextRankName={nextRankName}
+                    weekSp={weekSp}
+                    nextRankSp={nextRankSp}
+                    weekXp={weekXp}
+                  />
+                );
+              })
+            )}
+          </div>
+        </TooltipProvider>
       </section>
     </div>
   );
