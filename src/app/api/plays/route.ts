@@ -6,6 +6,7 @@ import { createPlaySchema, getPlaysQuerySchema } from '@/lib/validations/play'
 import {
   formatInternalError,
   formatNotFoundError,
+  formatFieldError,
   formatZodError,
 } from '@/lib/validations/helpers'
 
@@ -15,6 +16,7 @@ const playLogInclude = {
       id: true,
       label: true,
       categoryId: true,
+      unit: true,
       category: {
         select: {
           id: true,
@@ -80,6 +82,7 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         categoryId: true,
+        unit: true,
         category: {
           select: {
             id: true,
@@ -92,6 +95,13 @@ export async function POST(request: NextRequest) {
 
     if (!action) {
       return formatNotFoundError('アクション', result.data.actionId)
+    }
+
+    if (action.unit && result.data.quantity == null) {
+      return formatFieldError('quantity', '数量は必須です')
+    }
+    if (!action.unit && result.data.quantity != null) {
+      return formatFieldError('quantity', '単位が未設定のため数量は入力できません')
     }
 
     const now = new Date()
@@ -119,6 +129,7 @@ export async function POST(request: NextRequest) {
           dayKey: targetDayKey,
           actionId: action.id,
           note: result.data.note,
+          quantity: result.data.quantity,
         },
         include: playLogInclude,
       })

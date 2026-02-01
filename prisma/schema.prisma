@@ -37,6 +37,7 @@ model Action {
   id         String   @id @default(cuid())
   categoryId String
   label      String
+  unit       String?  // 単位（回、分、km など）
   visible    Boolean  @default(true)
   order      Int      @default(0)
   createdAt  DateTime @default(now())
@@ -55,6 +56,7 @@ model PlayLog {
   dayKey   String   // YYYY-MM-DD（ローカル）
   actionId String
   note     String?
+  quantity Int?     // 数量（回数・分など）
   createdAt DateTime @default(now())
 
   action                Action                 @relation(fields: [actionId], references: [id], onDelete: Cascade)

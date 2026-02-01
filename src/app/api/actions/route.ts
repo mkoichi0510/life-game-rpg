@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
       data: {
         categoryId: result.data.categoryId,
         label: result.data.label,
+        unit: result.data.unit,
         visible: result.data.visible,
         order: result.data.order,
       },

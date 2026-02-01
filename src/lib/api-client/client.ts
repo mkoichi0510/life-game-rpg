@@ -17,6 +17,7 @@ export type Action = {
   id: string;
   categoryId: string;
   label: string;
+  unit: string | null;
   order: number;
   visible: boolean;
   createdAt: string;
@@ -102,10 +103,12 @@ export type PlayLog = {
   dayKey: string;
   at: string;
   note: string | null;
+  quantity: number | null;
   action: {
     id: string;
     label: string;
     categoryId: string;
+    unit: string | null;
     category: {
       id: string;
       name: string;
@@ -154,7 +157,11 @@ export function fetchPlayLogs(dayKey: string, categoryId?: string) {
   return requestJson<{ playLogs: PlayLog[] }>(`/api/plays?${params.toString()}`);
 }
 
-export function createPlay(input: { actionId: string; note?: string }) {
+export function createPlay(input: {
+  actionId: string;
+  note?: string;
+  quantity?: number;
+}) {
   return requestJson<{ playLog: PlayLog }>("/api/plays", {
     method: "POST",
     body: JSON.stringify(input),

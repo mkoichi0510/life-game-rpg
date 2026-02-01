@@ -92,6 +92,7 @@ erDiagram
 | id | String | PK, cuid() | 一意識別子 |
 | categoryId | String | FK, NOT NULL | 所属カテゴリID |
 | label | String | NOT NULL | アクション名（例：「筋トレ（上半身）」） |
+| unit | String? | - | 単位（例：「回」「分」「km」）。未設定なら数量入力なし |
 | visible | Boolean | DEFAULT true | 表示/非表示フラグ |
 | order | Int | DEFAULT 0 | 表示順序 |
 | createdAt | DateTime | DEFAULT now() | 作成日時 |
@@ -120,6 +121,7 @@ erDiagram
 | dayKey | String | NOT NULL | 所属日（YYYY-MM-DD） |
 | actionId | String | FK, NOT NULL | 実行アクションID |
 | note | String? | - | 任意メモ |
+| quantity | Int? | - | 数量（例：30回、60分） |
 | createdAt | DateTime | DEFAULT now() | 作成日時 |
 
 **リレーション:**
