@@ -32,15 +32,36 @@ export async function registerPlay(
   page: Page,
   categoryId: string,
   actionId: string,
-  note?: string
+  note?: string,
+  quantity?: number
 ) {
   await goPlay(page);
   await page.getByTestId(`play-category-${categoryId}`).click();
   await page.getByTestId(`play-action-${actionId}`).click();
+  const quantityInput = page.getByTestId("play-quantity-input");
+  if ((await quantityInput.count()) > 0) {
+    await quantityInput.fill(String(quantity ?? 1));
+  }
   if (note) {
     await page.getByTestId("play-note").fill(note);
   }
-  await page.getByTestId("play-submit").click();
+  const submitButton = page.getByTestId("play-submit");
+  await expect(submitButton).toBeEnabled();
+  const [response] = await Promise.all([
+    page.waitForResponse((res) => {
+      return (
+        res.url().includes("/api/plays") &&
+        res.request().method() === "POST"
+      );
+    }),
+    submitButton.click(),
+  ]);
+  if (response.status() !== 201) {
+    const body = await response.text();
+    throw new Error(
+      `createPlay failed: ${response.status()} ${body || "(empty)"}`
+    );
+  }
   await expect(page.getByTestId("play-success")).toBeVisible();
 }
 

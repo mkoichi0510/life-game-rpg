@@ -11,3 +11,5 @@ node_modules/*
 *.swp
 coverage/
 test-results/
+# next-agents-md
+.next-docs/

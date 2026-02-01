@@ -39,7 +39,7 @@ async function main() {
     { label: '筋トレ（上半身）', order: 1 },
     { label: '筋トレ（下半身）', order: 2 },
     { label: '有酸素運動（30分以上）', order: 3 },
-    { label: 'ストレッチ', order: 4 },
+    { label: 'ストレッチ', order: 4, unit: '回' },
     { label: '早寝早起き', order: 5 },
   ]
 
@@ -51,6 +51,7 @@ async function main() {
         id: `health-${action.order}`,
         categoryId: healthCategory.id,
         label: action.label,
+        unit: action.unit,
         visible: true,
         order: action.order,
       },
