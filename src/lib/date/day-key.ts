@@ -29,9 +29,26 @@ export function formatDayKey(date: Date): string {
 
 /**
  * 今日のdayKeyを取得
+ *
+ * @remarks
+ * E2Eテスト用の日付オーバーライド機能:
+ * - `TODAY_KEY_OVERRIDE` または `NEXT_PUBLIC_TODAY_KEY_OVERRIDE` 環境変数で日付を固定可能（形式: YYYY-MM-DD）
+ * - サーバーサイドでは `TODAY_KEY_OVERRIDE` を優先
+ * - 主にE2Eテストでの日付固定に使用（.env.e2e で設定）
+ *
  * @returns 今日のdayKey文字列
  */
 export function getTodayKey(): string {
+  const override =
+    typeof window === "undefined"
+      ? process.env.TODAY_KEY_OVERRIDE ??
+        process.env.NEXT_PUBLIC_TODAY_KEY_OVERRIDE
+      : process.env.NEXT_PUBLIC_TODAY_KEY_OVERRIDE;
+
+  if (override && /^\d{4}-\d{2}-\d{2}$/.test(override)) {
+    return override;
+  }
+
   return formatDayKey(new Date());
 }
 
@@ -60,7 +77,7 @@ export function getRecentDayKeys(days: number): string[] {
   }
 
   const result: string[] = [];
-  const today = new Date();
+  const today = parseDayKey(getTodayKey());
 
   for (let i = 0; i < days; i++) {
     const date = new Date(today);

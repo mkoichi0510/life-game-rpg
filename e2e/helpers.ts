@@ -67,7 +67,9 @@ export async function registerPlay(
 
 export async function confirmDay(page: Page) {
   await goResult(page);
-  await page.getByTestId("result-confirm").click();
+  const confirmButton = page.getByTestId("result-confirm");
+  await expect(confirmButton).toBeEnabled();
+  await confirmButton.click();
   await page.getByRole("dialog").getByTestId("result-confirm-submit").click();
   await expect(page.getByTestId("result-status")).toHaveText(/確定済み/);
 }
