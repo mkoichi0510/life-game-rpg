@@ -148,7 +148,7 @@ export default function PlayPage() {
 
     if (hasUnit) {
       const quantityValue = Number(quantity);
-      if (!quantity || Number.isNaN(quantityValue) || quantityValue < 1) {
+      if (!quantity || Number.isNaN(quantityValue) || quantityValue < 1 || !Number.isInteger(quantityValue)) {
         nextErrors.quantity = "数量は1以上の整数で入力してください";
       }
     }
