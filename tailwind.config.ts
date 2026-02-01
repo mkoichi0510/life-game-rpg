@@ -104,6 +104,14 @@ const config: Config = {
           "50%": { transform: "scale(1.1)" },
           "100%": { opacity: "1", transform: "scale(1)" },
         },
+        "collapsible-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-collapsible-content-height)" },
+        },
+        "collapsible-up": {
+          from: { height: "var(--radix-collapsible-content-height)" },
+          to: { height: "0" },
+        },
       },
       animation: {
         "xp-pop": "xp-pop 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
@@ -112,6 +120,8 @@ const config: Config = {
         shimmer: "shimmer 2s ease-in-out infinite",
         "count-up": "count-up 500ms ease-out forwards",
         "badge-pop": "badge-pop 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
+        "collapsible-down": "collapsible-down 150ms ease-out",
+        "collapsible-up": "collapsible-up 150ms ease-out",
       },
     },
   },

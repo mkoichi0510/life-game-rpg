@@ -6,10 +6,16 @@ import {
   ArrowLeft,
   Check,
   CheckCircle2,
+  ChevronDown,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getCategoryColor, getCategoryIcon } from "@/lib/category-ui";
 import { useTodayKey } from "@/lib/hooks/use-today-key";
@@ -42,6 +48,7 @@ export default function PlayPage() {
   const [actions, setActions] = useState<Action[]>([]);
   const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
   const [note, setNote] = useState("");
+  const [isMemoOpen, setIsMemoOpen] = useState(false);
   const [quantity, setQuantity] = useState("");
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [loadingActions, setLoadingActions] = useState(false);
@@ -176,6 +183,7 @@ export default function PlayPage() {
       successTimerRef.current = setTimeout(() => setSuccess(null), SUCCESS_BANNER_DURATION_MS);
       setSelectedActionId(null);
       setNote("");
+      setIsMemoOpen(false);
       await loadCategories();
     } catch (error) {
       if (
@@ -411,29 +419,45 @@ export default function PlayPage() {
 
   const memoSection = (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-base">メモ（任意）</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="space-y-2">
-          <textarea
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-            maxLength={NOTE_MAX_LENGTH}
-            rows={4}
-            placeholder="今日やったことをメモできます"
-            data-testid="play-note"
-            className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          />
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>
-              {selectedAction ? selectedAction.label : "アクション未選択"}
-            </span>
-            <span>
-              {note.length}/{NOTE_MAX_LENGTH}
-            </span>
-          </div>
-        </div>
+      <Collapsible open={isMemoOpen} onOpenChange={setIsMemoOpen}>
+        <CardHeader>
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="group flex w-full items-center justify-between text-left"
+              data-testid="play-note-toggle"
+              aria-expanded={isMemoOpen}
+              aria-label="メモセクション"
+            >
+              <CardTitle className="text-base">メモを追加（任意）</CardTitle>
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+            </button>
+          </CollapsibleTrigger>
+        </CardHeader>
+        <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+          <CardContent className="space-y-2">
+            <textarea
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              maxLength={NOTE_MAX_LENGTH}
+              rows={4}
+              placeholder="今日やったことをメモできます"
+              data-testid="play-note"
+              className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            />
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>
+                {selectedAction ? selectedAction.label : "アクション未選択"}
+              </span>
+              <span>
+                {note.length}/{NOTE_MAX_LENGTH}
+              </span>
+            </div>
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+      {/* XPプレビューを折りたたみ外に配置し常時表示 */}
+      <CardContent className="pt-0">
         <div className="flex items-center gap-2 text-sm font-medium">
           <span className="text-muted-foreground">プレビュー</span>
           <span className="text-amber-600">
