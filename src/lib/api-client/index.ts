@@ -115,3 +115,9 @@ export function fetchCurrentSeasonalTitle(categoryId: string) {
     )}`
   );
 }
+
+export function fetchSeasonalTitles(categoryId: string) {
+  return requestJson<{ titles: SeasonalTitle[] }>(
+    `/api/skills/seasonal-titles?categoryId=${encodeURIComponent(categoryId)}`
+  );
+}
