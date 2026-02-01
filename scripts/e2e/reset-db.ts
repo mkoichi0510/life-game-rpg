@@ -11,6 +11,7 @@ execSync("pnpm prisma db push --force-reset", {
   stdio: "inherit",
   env: process.env,
 });
+
 execSync("pnpm db:seed", {
   stdio: "inherit",
   env: process.env,

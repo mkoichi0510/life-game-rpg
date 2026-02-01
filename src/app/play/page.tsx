@@ -32,6 +32,7 @@ const SUCCESS_BANNER_DURATION_MS = 5000;
 type ValidationErrors = {
   category?: string;
   action?: string;
+  quantity?: string;
 };
 
 export default function PlayPage() {
@@ -41,6 +42,7 @@ export default function PlayPage() {
   const [actions, setActions] = useState<Action[]>([]);
   const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
   const [note, setNote] = useState("");
+  const [quantity, setQuantity] = useState("");
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [loadingActions, setLoadingActions] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -66,6 +68,7 @@ export default function PlayPage() {
     () => actions.find((action) => action.id === selectedActionId) ?? null,
     [actions, selectedActionId]
   );
+  const hasUnit = Boolean(selectedAction?.unit);
 
   const loadCategories = useCallback(async () => {
     setLoadingCategories(true);
@@ -125,6 +128,15 @@ export default function PlayPage() {
     loadActions(selectedCategoryId);
   }, [loadActions, selectedCategoryId]);
 
+  useEffect(() => {
+    if (hasUnit) {
+      setQuantity("1");
+    } else {
+      setQuantity("");
+    }
+    setErrors((prev) => ({ ...prev, quantity: undefined }));
+  }, [hasUnit, selectedAction?.id]);
+
   const handleSubmit = async () => {
     const nextErrors: ValidationErrors = {};
     if (!selectedCategoryId) {
@@ -132,6 +144,13 @@ export default function PlayPage() {
     }
     if (!selectedActionId) {
       nextErrors.action = "アクションを選択してください";
+    }
+
+    if (hasUnit) {
+      const quantityValue = Number(quantity);
+      if (!quantity || Number.isNaN(quantityValue) || quantityValue < 1 || !Number.isInteger(quantityValue)) {
+        nextErrors.quantity = "数量は1以上の整数で入力してください";
+      }
     }
 
     if (Object.keys(nextErrors).length > 0) {
@@ -148,6 +167,7 @@ export default function PlayPage() {
       await createPlay({
         actionId: selectedAction.id,
         note: note.trim() ? note.trim() : undefined,
+        quantity: hasUnit ? Number(quantity) : undefined,
       });
       const xp = selectedCategory.xpPerPlay;
       showXpGained(xp);
@@ -167,6 +187,10 @@ export default function PlayPage() {
         const reason = error.details.reason;
         if (field === "actionId") {
           setErrors({ action: String(reason ?? "アクションを選択してください") });
+          return;
+        }
+        if (field === "quantity") {
+          setErrors({ quantity: String(reason ?? "数量を入力してください") });
           return;
         }
       }
@@ -327,6 +351,64 @@ export default function PlayPage() {
     </Card>
   );
 
+  const quantitySection = (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">数量</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => {
+              const current = Number(quantity || "1");
+              const next = Math.max(1, current - 1);
+              setQuantity(String(next));
+            }}
+            data-testid="play-quantity-decrement"
+          >
+            -
+          </Button>
+          <input
+            value={quantity}
+            onChange={(event) => {
+              const nextValue = event.target.value;
+              if (!/^\d*$/.test(nextValue)) return;
+              setQuantity(nextValue);
+            }}
+            type="number"
+            min={1}
+            step={1}
+            inputMode="numeric"
+            data-testid="play-quantity-input"
+            className="w-24 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => {
+              const current = Number(quantity || "0");
+              const next = Math.max(1, current + 1);
+              setQuantity(String(next));
+            }}
+            data-testid="play-quantity-increment"
+          >
+            +
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            {selectedAction?.unit}
+          </span>
+        </div>
+        {errors.quantity && (
+          <p className="text-sm text-destructive">{errors.quantity}</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+
   const memoSection = (
     <Card>
       <CardHeader>
@@ -413,6 +495,7 @@ export default function PlayPage() {
 
       {categorySection}
       {actionSection}
+      {hasUnit && quantitySection}
       {memoSection}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
