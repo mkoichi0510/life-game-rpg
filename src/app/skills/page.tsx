@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NodeUnlockDialog } from "@/components/skills/node-unlock-dialog";
 import { SeasonalTitleBadge } from "@/components/skills/seasonal-title-badge";
+import { SkillSteps } from "@/components/skills/skill-steps";
 import { SkillTreeView } from "@/components/skills/skill-tree-view";
 import { getCategoryColor, getCategoryColorKey } from "@/lib/category-ui";
 import { SKILL_NODE_STATE } from "@/lib/constants";
@@ -49,6 +50,9 @@ export default function SkillsPage() {
   const [unlocking, setUnlocking] = useState(false);
   const latestCategoryIdRef = useRef<string | null>(null);
   const selectedTreeIdRef = useRef<string | null>(null);
+  const categorySectionRef = useRef<HTMLDivElement | null>(null);
+  const treeSectionRef = useRef<HTMLDivElement | null>(null);
+  const treeViewSectionRef = useRef<HTMLDivElement | null>(null);
 
   const playerStateMap = useMemo(
     () => new Map(playerStates.map((state) => [state.categoryId, state])),
@@ -253,6 +257,18 @@ export default function SkillsPage() {
     setUnlockDialogOpen(true);
   };
 
+  const currentStep = !selectedCategoryId ? 1 : !selectedTreeId ? 2 : 3;
+
+  const handleStepClick = useCallback((step: 1 | 2 | 3) => {
+    const target =
+      step === 1
+        ? categorySectionRef.current
+        : step === 2
+          ? treeSectionRef.current
+          : treeViewSectionRef.current;
+    target?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   const handleUnlock = async () => {
     if (!selectedNode || !selectedCategoryId) return;
     if (nodeStates.get(selectedNode.id) !== SKILL_NODE_STATE.UNLOCKABLE) return;
@@ -444,7 +460,11 @@ export default function SkillsPage() {
         </div>
       </div>
 
-      {categoryTabs}
+      <SkillSteps currentStep={currentStep} onStepClick={handleStepClick} />
+
+      <div ref={categorySectionRef} className="scroll-mt-24">
+        {categoryTabs}
+      </div>
 
       <Card>
         <CardHeader>
@@ -469,8 +489,12 @@ export default function SkillsPage() {
         </CardContent>
       </Card>
 
-      {treeTabs}
-      {treeSection}
+      <div ref={treeSectionRef} className="scroll-mt-24">
+        {treeTabs}
+      </div>
+      <div ref={treeViewSectionRef} className="scroll-mt-24">
+        {treeSection}
+      </div>
 
       <NodeUnlockDialog
         open={unlockDialogOpen}
