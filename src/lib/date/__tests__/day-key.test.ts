@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import {
   formatDayKey,
+  formatRankWindowRange,
   getTodayKey,
   getNextDayKey,
   getRecentDayKeys,
@@ -137,5 +138,44 @@ describe("parseDayKey", () => {
     const originalKey = "2026-06-15";
     const date = parseDayKey(originalKey);
     expect(formatDayKey(date)).toBe(originalKey);
+  });
+});
+
+describe("formatRankWindowRange", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    // Set time to 2026-01-20 12:00:00 JST
+    vi.setSystemTime(new Date("2026-01-20T12:00:00+09:00"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("正常系: 7日間のウィンドウ", () => {
+    // 2026-01-20から7日前まで = 1/14 - 1/20
+    const result = formatRankWindowRange(7);
+    expect(result).toBe("1/14 - 1/20");
+  });
+
+  it("正常系: 1日間のウィンドウ", () => {
+    const result = formatRankWindowRange(1);
+    expect(result).toBe("1/20 - 1/20");
+  });
+
+  it("境界値: 0日 → ハイフン", () => {
+    expect(formatRankWindowRange(0)).toBe("-");
+  });
+
+  it("境界値: 負の日数 → ハイフン", () => {
+    expect(formatRankWindowRange(-1)).toBe("-");
+  });
+
+  it("月をまたぐ場合", () => {
+    // Set to 2026-02-03
+    vi.setSystemTime(new Date("2026-02-03T12:00:00+09:00"));
+    // 7日前 = 1/28
+    const result = formatRankWindowRange(7);
+    expect(result).toBe("1/28 - 2/3");
   });
 });

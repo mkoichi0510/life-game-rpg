@@ -18,6 +18,7 @@ describe("RankCard", () => {
           weekSp={6}
           nextRankSp={8}
           weekXp={120}
+          rankWindowRange="1/27 - 2/2"
         />
       </TooltipProvider>
     );
@@ -26,6 +27,7 @@ describe("RankCard", () => {
     expect(html).toContain("あと 2 SPでストイック");
     expect(html).toContain("6 SP");
     expect(html).toContain("120 XP");
+    // ツールチップ内容はSSRでは出力されないためE2Eテストで検証
     expect(html).toContain("アクティブ");
     expect(html).toContain("健康");
 
@@ -51,6 +53,7 @@ describe("RankCard", () => {
           weekSp={12}
           nextRankSp={0}
           weekXp={240}
+          rankWindowRange="1/27 - 2/2"
         />
       </TooltipProvider>
     );
@@ -80,6 +83,7 @@ describe("RankCard", () => {
           weekSp={15}
           nextRankSp={0}
           weekXp={300}
+          rankWindowRange="1/27 - 2/2"
         />
       </TooltipProvider>
     );
@@ -100,6 +104,7 @@ describe("RankCard", () => {
           weekSp={5}
           nextRankSp={10}
           weekXp={100}
+          rankWindowRange="1/27 - 2/2"
         />
       </TooltipProvider>
     );

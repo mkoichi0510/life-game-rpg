@@ -10,7 +10,11 @@ import { RankCard } from "@/components/home/rank-card";
 import { cn } from "@/lib/utils";
 import { CATEGORY_COLORS, DAILY_RESULT_STATUS } from "@/lib/constants";
 import { getCategoryColorKey } from "@/lib/category-ui";
-import { DEFAULT_TIMEZONE, getTodayKey } from "@/lib/date";
+import {
+  DEFAULT_TIMEZONE,
+  formatRankWindowRange,
+  getTodayKey,
+} from "@/lib/date";
 import {
   fetchCategories,
   fetchCurrentSeasonalTitle,
@@ -247,6 +251,9 @@ export default async function Home() {
                   titlesSorted.find((title) => title.minSpEarned > weekSp) ?? null;
                 const nextRankName = nextTitle?.label ?? null;
                 const nextRankSp = nextTitle?.minSpEarned ?? 0;
+                const rankWindowRange = formatRankWindowRange(
+                  category.rankWindowDays
+                );
 
                 return (
                   <RankCard
@@ -259,6 +266,7 @@ export default async function Home() {
                     weekSp={weekSp}
                     nextRankSp={nextRankSp}
                     weekXp={weekXp}
+                    rankWindowRange={rankWindowRange}
                   />
                 );
               })
