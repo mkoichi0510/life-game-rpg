@@ -32,6 +32,16 @@ export function formatDayKey(date: Date): string {
  * @returns 今日のdayKey文字列
  */
 export function getTodayKey(): string {
+  const override =
+    typeof window === "undefined"
+      ? process.env.TODAY_KEY_OVERRIDE ??
+        process.env.NEXT_PUBLIC_TODAY_KEY_OVERRIDE
+      : process.env.NEXT_PUBLIC_TODAY_KEY_OVERRIDE;
+
+  if (override && /^\d{4}-\d{2}-\d{2}$/.test(override)) {
+    return override;
+  }
+
   return formatDayKey(new Date());
 }
 
@@ -60,7 +70,7 @@ export function getRecentDayKeys(days: number): string[] {
   }
 
   const result: string[] = [];
-  const today = new Date();
+  const today = parseDayKey(getTodayKey());
 
   for (let i = 0; i < days; i++) {
     const date = new Date(today);

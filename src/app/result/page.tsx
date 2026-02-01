@@ -307,6 +307,11 @@ export default function ResultPage() {
                   .xpPerPlay ?? null;
               const isDeleting = deletingIds.has(log.id);
 
+              const playLabel =
+                log.quantity != null && log.action.unit
+                  ? `${log.action.label} × ${log.quantity}${log.action.unit}`
+                  : log.action.label;
+
               return (
                 <div
                   key={log.id}
@@ -326,7 +331,7 @@ export default function ResultPage() {
                         {formatTimeLabel(log.at)} ・ {log.action.category.name}
                         {xpPerPlay !== null && ` ・ ${xpPerPlay} XP`}
                       </p>
-                      <p className="text-sm font-semibold">{log.action.label}</p>
+                      <p className="text-sm font-semibold">{playLabel}</p>
                       {log.note && (
                         <p className="text-xs text-muted-foreground">
                           {log.note}

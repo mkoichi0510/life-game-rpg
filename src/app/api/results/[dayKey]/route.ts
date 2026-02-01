@@ -25,8 +25,10 @@ export async function GET(
     const validatedDayKey = result.data.dayKey
     const todayKey = getTodayKey()
 
+    const disableAutoConfirm = process.env.DISABLE_AUTO_CONFIRM === 'true'
+
     // 過去日付の場合のみ遅延確定
-    if (validatedDayKey < todayKey) {
+    if (!disableAutoConfirm && validatedDayKey < todayKey) {
       try {
         await confirmDay(validatedDayKey, { allowAlreadyConfirmed: true })
       } catch (error) {

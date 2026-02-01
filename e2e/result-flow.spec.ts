@@ -8,10 +8,12 @@ test.beforeEach(() => {
 test("リザルト確認・削除・確定フロー", async ({ page }) => {
   await registerPlay(page, "health-category", "health-1");
   await registerPlay(page, "health-category", "health-1");
+  await registerPlay(page, "health-category", "health-4", undefined, 30);
 
   await goResult(page);
 
   const playLogList = page.getByTestId("playlog-list");
+  await expect(playLogList).toContainText("ストレッチ × 30回");
   const rows = playLogList.locator(":scope > div");
   await expect
     .poll(async () => rows.count(), { timeout: 10_000 })
