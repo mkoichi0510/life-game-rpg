@@ -22,7 +22,8 @@ const stepValue = (step: SkillStep) => `step-${step}`;
 export function SkillSteps({ currentStep, onStepClick }: SkillStepsProps) {
   const handleValueChange = (value: string) => {
     const parsed = Number(value.replace("step-", ""));
-    if (![1, 2, 3].includes(parsed)) return;
+    const validStepIds = steps.map((s) => s.id);
+    if (!validStepIds.includes(parsed as SkillStep)) return;
     const step = parsed as SkillStep;
     if (step > currentStep) return;
     onStepClick(step);
