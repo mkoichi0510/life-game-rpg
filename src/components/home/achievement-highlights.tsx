@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import type { HighlightsResponse } from "@/lib/api-client";
 
 type AchievementHighlightsProps = {
@@ -25,31 +25,30 @@ export function AchievementHighlights({ highlights }: AchievementHighlightsProps
     };
   });
 
-  const summaryEntry: HighlightEntry = {
-    id: "summary",
-    label: `今週: +${highlights.weekSummary.totalXp} XP, +${highlights.weekSummary.totalSp} SP`,
-  };
+  const hasSummary =
+    highlights.weekSummary.totalXp > 0 || highlights.weekSummary.totalSp > 0;
+  const summaryEntries: HighlightEntry[] = hasSummary
+    ? [
+        {
+          id: "summary",
+          label: `今週: +${highlights.weekSummary.totalXp} XP, +${highlights.weekSummary.totalSp} SP`,
+        },
+      ]
+    : [];
 
-  const entries = [...unlockedEntries, ...rankEntries, summaryEntry];
-  const isEmpty =
-    unlockedEntries.length === 0 &&
-    rankEntries.length === 0 &&
-    highlights.weekSummary.totalXp === 0 &&
-    highlights.weekSummary.totalSp === 0;
+  const entries = [...unlockedEntries, ...rankEntries, ...summaryEntries];
+  const isEmpty = entries.length === 0;
 
   return (
     <section className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold tracking-tight">最近の成果</h3>
+          <h3 className="text-lg font-bold tracking-tight">🎯 最近の成果</h3>
           <p className="text-xs text-muted-foreground">直近の達成内容</p>
         </div>
       </div>
       <Card className="border bg-card/80">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">🎯 最近の成果</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           {isEmpty ? (
             <p className="text-sm text-muted-foreground">
               まだ成果がありません。頑張りましょう！
