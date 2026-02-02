@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { RankCard } from "@/components/home/rank-card";
+import { AchievementHighlights } from "@/components/home/achievement-highlights";
 import { cn } from "@/lib/utils";
 import { CATEGORY_COLORS, DAILY_RESULT_STATUS } from "@/lib/constants";
 import { getCategoryColorKey } from "@/lib/category-ui";
@@ -19,6 +20,7 @@ import {
   fetchCategories,
   fetchCurrentSeasonalTitle,
   fetchDailyResult,
+  fetchHighlights,
   fetchSeasonalTitles,
 } from "@/lib/api-client";
 
@@ -32,9 +34,10 @@ function formatTodayLabel(date = new Date()): string {
 
 export default async function Home() {
   const todayKey = getTodayKey();
-  const [categoriesResponse, dailyResultResponse] = await Promise.all([
+  const [categoriesResponse, dailyResultResponse, highlights] = await Promise.all([
     fetchCategories(true),
     fetchDailyResult(todayKey),
+    fetchHighlights(),
   ]);
 
   const categories = categoriesResponse.categories
@@ -218,6 +221,8 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      <AchievementHighlights highlights={highlights} />
 
       {/* ランクカードセクション */}
       <section className="space-y-4">
