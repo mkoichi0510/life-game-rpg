@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 import dotenv from "dotenv";
 
-dotenv.config({ path: ".env.e2e" });
+dotenv.config({ path: ".env.e2e", override: true });
 
 const baseURL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -23,12 +23,15 @@ export default defineConfig({
   webServer: {
     command: "pnpm e2e:db:reset && pnpm next build --webpack && pnpm start",
     url: baseURL,
-    reuseExistingServer: process.env.CI !== "true",
+    reuseExistingServer: false,
     env: {
       ...process.env,
       DATABASE_URL: process.env.DATABASE_URL,
       NEXT_PUBLIC_APP_URL: baseURL,
       NEXT_DISABLE_GOOGLE_FONTS: "1",
+      NEXT_PUBLIC_TODAY_KEY_OVERRIDE: process.env.NEXT_PUBLIC_TODAY_KEY_OVERRIDE,
+      TODAY_KEY_OVERRIDE: process.env.TODAY_KEY_OVERRIDE,
+      DISABLE_AUTO_CONFIRM: process.env.DISABLE_AUTO_CONFIRM,
     },
   },
   projects: [

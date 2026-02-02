@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { formatDayKey, getNextDayKey } from '@/lib/date'
+import { getNextDayKey, getTodayKey } from '@/lib/date'
 import { calculateSpFromXp, calculateXpEarned } from '@/lib/calculation'
 import { createPlaySchema, getPlaysQuerySchema } from '@/lib/validations/play'
 import {
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     }
 
     const now = new Date()
-    const todayKey = formatDayKey(now)
+    const todayKey = getTodayKey()
     const todayResult = await prisma.dailyResult.findUnique({
       where: { dayKey: todayKey },
       select: { status: true },
