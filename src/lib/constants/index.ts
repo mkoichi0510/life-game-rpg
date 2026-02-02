@@ -82,3 +82,14 @@ export const DEFAULTS = {
   XP_PER_SP: 20,
   RANK_WINDOW_DAYS: 7,
 } as const;
+
+/**
+ * スキルツリー画面のステップ定数
+ */
+export const SKILL_STEP = {
+  CATEGORY_SELECT: 1,
+  TREE_SELECT: 2,
+  SKILL_TREE: 3,
+} as const;
+
+export type SkillStep = (typeof SKILL_STEP)[keyof typeof SKILL_STEP];
