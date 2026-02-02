@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NodeUnlockDialog } from "@/components/skills/node-unlock-dialog";
 import { SeasonalTitleBadge } from "@/components/skills/seasonal-title-badge";
-import { SkillSteps } from "@/components/skills/skill-steps";
+import { SkillSteps, type SkillStep } from "@/components/skills/skill-steps";
 import { SkillTreeView } from "@/components/skills/skill-tree-view";
 import { getCategoryColor, getCategoryColorKey } from "@/lib/category-ui";
 import { SKILL_NODE_STATE } from "@/lib/constants";
@@ -49,7 +49,9 @@ export default function SkillsPage() {
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const latestCategoryIdRef = useRef<string | null>(null);
+  const selectedCategoryIdRef = useRef<string | null>(null);
   const selectedTreeIdRef = useRef<string | null>(null);
+  const pendingAutoScrollRef = useRef<SkillStep | null>(null);
   const categorySectionRef = useRef<HTMLDivElement | null>(null);
   const treeSectionRef = useRef<HTMLDivElement | null>(null);
   const treeViewSectionRef = useRef<HTMLDivElement | null>(null);
@@ -118,6 +120,30 @@ export default function SkillsPage() {
     return map;
   }, [nodesByTreeId, trees]);
 
+  const resolveDefaultCategoryId = useCallback(
+    async (nextCategories: Category[]) => {
+      if (nextCategories.length === 0) return null;
+
+      try {
+        const results = await Promise.all(
+          nextCategories.map(async (category) => {
+            try {
+              const treesResponse = await fetchSkillTrees(category.id, true);
+              return { categoryId: category.id, hasTrees: treesResponse.trees.length > 0 };
+            } catch {
+              return { categoryId: category.id, hasTrees: false };
+            }
+          })
+        );
+        const matched = results.find((result) => result.hasTrees);
+        return matched?.categoryId ?? nextCategories[0]?.id ?? null;
+      } catch {
+        return nextCategories[0]?.id ?? null;
+      }
+    },
+    []
+  );
+
   const loadBaseData = useCallback(async () => {
     setLoadingBase(true);
     try {
@@ -130,8 +156,11 @@ export default function SkillsPage() {
         .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
       setCategories(sortedCategories);
       setPlayerStates(playerStatesResponse.playerStates);
-      if (!selectedCategoryId && sortedCategories.length > 0) {
-        setSelectedCategoryId(sortedCategories[0].id);
+      if (!selectedCategoryIdRef.current && sortedCategories.length > 0) {
+        const defaultCategoryId = await resolveDefaultCategoryId(sortedCategories);
+        if (!selectedCategoryIdRef.current && defaultCategoryId) {
+          setSelectedCategoryId(defaultCategoryId);
+        }
       }
     } catch (error) {
       const message = getUserMessage(error, "カテゴリの取得に失敗しました");
@@ -139,7 +168,7 @@ export default function SkillsPage() {
     } finally {
       setLoadingBase(false);
     }
-  }, [selectedCategoryId]);
+  }, [resolveDefaultCategoryId]);
 
   const loadTreeNodes = useCallback(async (treeId: string) => {
     const response = await fetchSkillNodes(treeId);
@@ -177,7 +206,7 @@ export default function SkillsPage() {
             currentTreeId &&
             sortedTrees.some((tree) => tree.id === currentTreeId)
               ? currentTreeId
-              : sortedTrees[0].id;
+              : null;
           setSelectedTreeId(nextTreeId);
         } else {
           setSelectedTreeId(null);
@@ -212,6 +241,10 @@ export default function SkillsPage() {
   }, [loadTreeNodes, selectedTreeId]);
 
   useEffect(() => {
+    selectedCategoryIdRef.current = selectedCategoryId;
+  }, [selectedCategoryId]);
+
+  useEffect(() => {
     selectedTreeIdRef.current = selectedTreeId;
   }, [selectedTreeId]);
 
@@ -237,12 +270,14 @@ export default function SkillsPage() {
   }, [nodesByTreeId, selectedNodeId, selectedTreeId]);
 
   const handleCategorySelect = (categoryId: string) => {
+    pendingAutoScrollRef.current = 2;
     setSelectedCategoryId(categoryId);
     setSelectedTreeId(null);
     setSelectedNodeId(null);
   };
 
   const handleTreeSelect = (treeId: string) => {
+    pendingAutoScrollRef.current = 3;
     setSelectedTreeId(treeId);
     const nodes = nodesByTreeId.get(treeId) ?? [];
     setSelectedNodeId(nodes[0]?.id ?? null);
@@ -268,6 +303,22 @@ export default function SkillsPage() {
           : treeViewSectionRef.current;
     target?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
+
+  useEffect(() => {
+    const pending = pendingAutoScrollRef.current;
+    if (!pending) return;
+
+    if (pending === 2 && selectedCategoryId) {
+      treeSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      pendingAutoScrollRef.current = null;
+      return;
+    }
+
+    if (pending === 3 && selectedTreeId) {
+      treeViewSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      pendingAutoScrollRef.current = null;
+    }
+  }, [selectedCategoryId, selectedTreeId, loadingTrees, trees]);
 
   const handleUnlock = async () => {
     if (!selectedNode || !selectedCategoryId) return;
@@ -298,13 +349,13 @@ export default function SkillsPage() {
   const categoryTabs = (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">カテゴリを選択</CardTitle>
+        <CardTitle className="text-base">Step 1. カテゴリ選択</CardTitle>
       </CardHeader>
       <CardContent>
         {loadingBase ? (
-          <div className="flex gap-2">
-            {[...Array(3)].map((_, index) => (
-              <Skeleton key={index} className="h-9 w-24" />
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[...Array(4)].map((_, index) => (
+              <Skeleton key={index} className="h-20 w-full" />
             ))}
           </div>
         ) : categories.length === 0 ? (
@@ -312,7 +363,7 @@ export default function SkillsPage() {
             表示できるカテゴリがありません。
           </p>
         ) : (
-          <div className="flex items-center gap-2 overflow-x-auto pb-2">
+          <div className="grid gap-3 sm:grid-cols-2">
             {categories.map((category) => {
               const isActive = category.id === selectedCategoryId;
               const colorKey = getCategoryColorKey(category);
@@ -325,22 +376,21 @@ export default function SkillsPage() {
                   onClick={() => handleCategorySelect(category.id)}
                   data-testid={`skill-category-${category.id}`}
                   className={cn(
-                    "flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition",
+                    "flex w-full flex-col items-start gap-2 rounded-xl border px-4 py-3 text-left text-sm font-semibold transition",
                     isActive
                       ? `${color.border} ${color.text} bg-muted/40`
-                      : "border-border text-muted-foreground hover:text-foreground"
+                      : "border-border text-foreground hover:bg-muted/40"
                   )}
                 >
-                  <span
-                    className={cn(
-                      "h-2.5 w-2.5 rounded-full",
-                      color.bg
-                    )}
-                    aria-hidden
-                  />
-                  {category.name}
-                  <span className="text-[10px] text-muted-foreground">
-                    SP:{sp}
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn("h-2.5 w-2.5 rounded-full", color.bg)}
+                      aria-hidden
+                    />
+                    <span>{category.name}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    未使用SP: {sp}
                   </span>
                   <span className="sr-only">{colorKey}</span>
                 </button>
@@ -355,21 +405,21 @@ export default function SkillsPage() {
   const treeTabs = (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">ツリーを選択</CardTitle>
+        <CardTitle className="text-base">Step 2. ツリー選択</CardTitle>
       </CardHeader>
       <CardContent>
         {loadingTrees ? (
-          <div className="flex gap-2">
+          <div className="grid gap-3 sm:grid-cols-2">
             {[...Array(2)].map((_, index) => (
-              <Skeleton key={index} className="h-9 w-28" />
+              <Skeleton key={index} className="h-20 w-full" />
             ))}
           </div>
         ) : trees.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            表示できるツリーがありません。
+            このカテゴリにはまだスキルツリーがありません。
           </p>
         ) : (
-          <div className="flex items-center gap-2 overflow-x-auto pb-2">
+          <div className="grid gap-3 sm:grid-cols-2">
             {trees.map((tree) => {
               const isActive = tree.id === selectedTreeId;
               const progress = treeProgressMap.get(tree.id) ?? {
@@ -383,14 +433,14 @@ export default function SkillsPage() {
                   onClick={() => handleTreeSelect(tree.id)}
                   data-testid={`skill-tree-${tree.id}`}
                   className={cn(
-                    "flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition",
+                    "flex w-full flex-col items-start gap-2 rounded-xl border px-4 py-3 text-left text-sm font-semibold transition",
                     isActive
                       ? `${colorClasses.border} ${colorClasses.text} bg-muted/40`
-                      : "border-border text-muted-foreground hover:text-foreground"
+                      : "border-border text-foreground hover:bg-muted/40"
                   )}
                 >
-                  {tree.name}
-                  <span className="text-[10px] text-muted-foreground">
+                  <span>{tree.name}</span>
+                  <span className="text-xs text-muted-foreground">
                     {progress.unlocked}/{progress.total} 解放済み
                   </span>
                 </button>
@@ -405,7 +455,7 @@ export default function SkillsPage() {
   const treeSection = (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">スキルツリー</CardTitle>
+        <CardTitle className="text-base">Step 3. スキルツリー</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {loadingTrees ? (
@@ -489,12 +539,16 @@ export default function SkillsPage() {
         </CardContent>
       </Card>
 
-      <div ref={treeSectionRef} className="scroll-mt-24">
-        {treeTabs}
-      </div>
-      <div ref={treeViewSectionRef} className="scroll-mt-24">
-        {treeSection}
-      </div>
+      {selectedCategoryId && (
+        <div ref={treeSectionRef} className="scroll-mt-24">
+          {treeTabs}
+        </div>
+      )}
+      {selectedTreeId && (
+        <div ref={treeViewSectionRef} className="scroll-mt-24">
+          {treeSection}
+        </div>
+      )}
 
       <NodeUnlockDialog
         open={unlockDialogOpen}
