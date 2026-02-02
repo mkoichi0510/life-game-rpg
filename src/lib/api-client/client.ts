@@ -84,6 +84,31 @@ export type SeasonalTitleCurrent = {
   rankWindowDays: number;
 };
 
+export type HighlightUnlockedNode = {
+  id: string;
+  name: string;
+  unlockedAt: string;
+  categoryName: string;
+};
+
+export type HighlightRankChange = {
+  categoryId: string;
+  categoryName: string;
+  fromRank: string | null;
+  toRank: string | null;
+};
+
+export type HighlightWeekSummary = {
+  totalSp: number;
+  totalXp: number;
+};
+
+export type HighlightsResponse = {
+  unlockedNodes: HighlightUnlockedNode[];
+  rankUps: HighlightRankChange[];
+  weekSummary: HighlightWeekSummary;
+};
+
 export type PlayerCategoryState = {
   id: string;
   categoryId: string;
@@ -210,4 +235,8 @@ export function fetchCurrentSeasonalTitle(categoryId: string) {
   return requestJson<SeasonalTitleCurrent>(
     `/api/skills/seasonal-titles/current?${params.toString()}`
   );
+}
+
+export function fetchHighlights() {
+  return requestJson<HighlightsResponse>("/api/highlights");
 }

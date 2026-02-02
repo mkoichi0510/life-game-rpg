@@ -67,6 +67,31 @@ export type SeasonalTitleCurrent = {
   rankWindowDays: number;
 };
 
+export type HighlightUnlockedNode = {
+  id: string;
+  name: string;
+  unlockedAt: string;
+  categoryName: string;
+};
+
+export type HighlightRankChange = {
+  categoryId: string;
+  categoryName: string;
+  fromRank: string | null;
+  toRank: string | null;
+};
+
+export type HighlightWeekSummary = {
+  totalSp: number;
+  totalXp: number;
+};
+
+export type HighlightsResponse = {
+  unlockedNodes: HighlightUnlockedNode[];
+  rankUps: HighlightRankChange[];
+  weekSummary: HighlightWeekSummary;
+};
+
 async function getBaseUrl(): Promise<string> {
   const headerStore = await headers();
   const host =
@@ -120,4 +145,8 @@ export function fetchSeasonalTitles(categoryId: string) {
   return requestJson<{ titles: SeasonalTitle[] }>(
     `/api/skills/seasonal-titles?categoryId=${encodeURIComponent(categoryId)}`
   );
+}
+
+export function fetchHighlights() {
+  return requestJson<HighlightsResponse>("/api/highlights");
 }
