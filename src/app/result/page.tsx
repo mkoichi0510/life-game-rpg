@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatInTimeZone } from "date-fns-tz";
@@ -50,7 +50,27 @@ function formatTimeLabel(isoString: string): string {
   });
 }
 
-export default function ResultPage() {
+function ResultPageSkeleton() {
+  return (
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 pb-12">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10" />
+          <div>
+            <Skeleton className="mb-1 h-4 w-20" />
+            <Skeleton className="h-6 w-24" />
+          </div>
+        </div>
+        <Skeleton className="h-6 w-20" />
+      </div>
+      <Skeleton className="h-16 w-full" />
+      <Skeleton className="h-32 w-full" />
+      <Skeleton className="h-48 w-full" />
+    </div>
+  );
+}
+
+function ResultPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const todayKey = useTodayKey();
@@ -565,5 +585,13 @@ export default function ResultPage() {
 
       {deleteConfirmDialog}
     </div>
+  );
+}
+
+export default function ResultPage() {
+  return (
+    <Suspense fallback={<ResultPageSkeleton />}>
+      <ResultPageContent />
+    </Suspense>
   );
 }

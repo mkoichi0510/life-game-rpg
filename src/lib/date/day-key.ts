@@ -4,6 +4,7 @@
  */
 
 import { formatInTimeZone } from "date-fns-tz";
+import { ja } from "date-fns/locale";
 
 import { DEFAULT_TIMEZONE } from "./timezone";
 
@@ -154,4 +155,18 @@ export function formatRankWindowRange(rankWindowDays: number): string {
     "M/d"
   );
   return `${startLabel} - ${endLabel}`;
+}
+
+/**
+ * dayKeyを「yyyy年M月d日（EEE）」形式でフォーマット
+ * @param dayKey - フォーマットするdayKey
+ * @returns フォーマットされた日付文字列（例: 2025年1月15日（水））
+ */
+export function formatDayLabel(dayKey: string): string {
+  return formatInTimeZone(
+    parseDayKey(dayKey),
+    DEFAULT_TIMEZONE,
+    "yyyy年M月d日（EEE）",
+    { locale: ja }
+  );
 }

@@ -1,24 +1,13 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { formatInTimeZone } from "date-fns-tz";
-import { ja } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
-import { DEFAULT_TIMEZONE, parseDayKey, getNextDayKey, getPreviousDayKey } from "@/lib/date";
+import { formatDayLabel, getNextDayKey, getPreviousDayKey } from "@/lib/date";
 
 interface DateNavProps {
   currentDayKey: string;
   todayKey: string;
   onDateChange: (dayKey: string) => void;
-}
-
-function formatDayLabel(dayKey: string): string {
-  return formatInTimeZone(
-    parseDayKey(dayKey),
-    DEFAULT_TIMEZONE,
-    "yyyy年M月d日（EEE）",
-    { locale: ja }
-  );
 }
 
 export function DateNav({ currentDayKey, todayKey, onDateChange }: DateNavProps) {
@@ -69,13 +58,15 @@ export function DateNav({ currentDayKey, todayKey, onDateChange }: DateNavProps)
         </Button>
       </div>
       {!isToday && (
-        <button
+        <Button
+          variant="link"
+          size="sm"
           onClick={handleGoToday}
-          className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+          className="text-muted-foreground"
           data-testid="date-nav-today"
         >
           今日に戻る
-        </button>
+        </Button>
       )}
     </div>
   );
