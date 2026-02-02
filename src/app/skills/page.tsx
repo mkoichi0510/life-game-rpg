@@ -8,10 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NodeUnlockDialog } from "@/components/skills/node-unlock-dialog";
 import { SeasonalTitleBadge } from "@/components/skills/seasonal-title-badge";
-import { SkillSteps, type SkillStep } from "@/components/skills/skill-steps";
+import { SkillSteps } from "@/components/skills/skill-steps";
 import { SkillTreeView } from "@/components/skills/skill-tree-view";
 import { getCategoryColor, getCategoryColorKey } from "@/lib/category-ui";
-import { SKILL_NODE_STATE } from "@/lib/constants";
+import { SKILL_NODE_STATE, SKILL_STEP, type SkillStep } from "@/lib/constants";
 import { getSkillNodeState } from "@/lib/skills/skill-node-state";
 import { showError, showNodeUnlocked } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -124,22 +124,18 @@ export default function SkillsPage() {
     async (nextCategories: Category[]) => {
       if (nextCategories.length === 0) return null;
 
-      try {
-        const results = await Promise.all(
-          nextCategories.map(async (category) => {
-            try {
-              const treesResponse = await fetchSkillTrees(category.id, true);
-              return { categoryId: category.id, hasTrees: treesResponse.trees.length > 0 };
-            } catch {
-              return { categoryId: category.id, hasTrees: false };
-            }
-          })
-        );
-        const matched = results.find((result) => result.hasTrees);
-        return matched?.categoryId ?? nextCategories[0]?.id ?? null;
-      } catch {
-        return nextCategories[0]?.id ?? null;
+      for (const category of nextCategories) {
+        try {
+          const treesResponse = await fetchSkillTrees(category.id, true);
+          if (treesResponse.trees.length > 0) {
+            return category.id;
+          }
+        } catch {
+          // エラーは無視して次へ
+        }
       }
+
+      return nextCategories[0]?.id ?? null;
     },
     []
   );
@@ -270,14 +266,14 @@ export default function SkillsPage() {
   }, [nodesByTreeId, selectedNodeId, selectedTreeId]);
 
   const handleCategorySelect = (categoryId: string) => {
-    pendingAutoScrollRef.current = 2;
+    pendingAutoScrollRef.current = SKILL_STEP.TREE_SELECT;
     setSelectedCategoryId(categoryId);
     setSelectedTreeId(null);
     setSelectedNodeId(null);
   };
 
   const handleTreeSelect = (treeId: string) => {
-    pendingAutoScrollRef.current = 3;
+    pendingAutoScrollRef.current = SKILL_STEP.SKILL_TREE;
     setSelectedTreeId(treeId);
     const nodes = nodesByTreeId.get(treeId) ?? [];
     setSelectedNodeId(nodes[0]?.id ?? null);
@@ -292,13 +288,17 @@ export default function SkillsPage() {
     setUnlockDialogOpen(true);
   };
 
-  const currentStep = !selectedCategoryId ? 1 : !selectedTreeId ? 2 : 3;
+  const currentStep: SkillStep = !selectedCategoryId
+    ? SKILL_STEP.CATEGORY_SELECT
+    : !selectedTreeId
+      ? SKILL_STEP.TREE_SELECT
+      : SKILL_STEP.SKILL_TREE;
 
-  const handleStepClick = useCallback((step: 1 | 2 | 3) => {
+  const handleStepClick = useCallback((step: SkillStep) => {
     const target =
-      step === 1
+      step === SKILL_STEP.CATEGORY_SELECT
         ? categorySectionRef.current
-        : step === 2
+        : step === SKILL_STEP.TREE_SELECT
           ? treeSectionRef.current
           : treeViewSectionRef.current;
     target?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -308,17 +308,20 @@ export default function SkillsPage() {
     const pending = pendingAutoScrollRef.current;
     if (!pending) return;
 
-    if (pending === 2 && selectedCategoryId) {
+    // ローディング中はスクロールしない
+    if (loadingTrees) return;
+
+    if (pending === SKILL_STEP.TREE_SELECT && selectedCategoryId) {
       treeSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       pendingAutoScrollRef.current = null;
       return;
     }
 
-    if (pending === 3 && selectedTreeId) {
+    if (pending === SKILL_STEP.SKILL_TREE && selectedTreeId) {
       treeViewSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       pendingAutoScrollRef.current = null;
     }
-  }, [selectedCategoryId, selectedTreeId, loadingTrees, trees]);
+  }, [selectedCategoryId, selectedTreeId, loadingTrees]);
 
   const handleUnlock = async () => {
     if (!selectedNode || !selectedCategoryId) return;

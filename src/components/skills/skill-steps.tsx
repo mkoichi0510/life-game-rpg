@@ -3,8 +3,7 @@
 import { Check, Circle, CircleDot, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-export type SkillStep = 1 | 2 | 3;
+import { SKILL_STEP, type SkillStep } from "@/lib/constants";
 
 interface SkillStepsProps {
   currentStep: SkillStep;
@@ -12,9 +11,9 @@ interface SkillStepsProps {
 }
 
 const steps: { id: SkillStep; label: string }[] = [
-  { id: 1, label: "カテゴリ選択" },
-  { id: 2, label: "ツリー選択" },
-  { id: 3, label: "スキルツリー" },
+  { id: SKILL_STEP.CATEGORY_SELECT, label: "カテゴリ選択" },
+  { id: SKILL_STEP.TREE_SELECT, label: "ツリー選択" },
+  { id: SKILL_STEP.SKILL_TREE, label: "スキルツリー" },
 ];
 
 const stepValue = (step: SkillStep) => `step-${step}`;
