@@ -86,9 +86,17 @@ export async function GET() {
       }),
     ])
 
+    let totalSp = 0
+    let totalXp = 0
+
+    for (const result of weekResults) {
+      totalSp += result.spEarned
+      totalXp += result.xpEarned
+    }
+
     const weekSummary = {
-      totalSp: weekResults.reduce((sum, r) => sum + r.spEarned, 0),
-      totalXp: weekResults.reduce((sum, r) => sum + r.xpEarned, 0),
+      totalSp,
+      totalXp,
     }
 
     const maxRankWindowDays = categories.reduce(

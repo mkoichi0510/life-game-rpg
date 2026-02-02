@@ -4,7 +4,9 @@ import {
   formatRankWindowRange,
   getTodayKey,
   getNextDayKey,
+  getPreviousDayKey,
   getRecentDayKeys,
+  isValidDayKey,
   parseDayKey,
 } from "../day-key";
 
@@ -76,6 +78,51 @@ describe("getNextDayKey", () => {
 
   it("境界値: 非うるう年の2月", () => {
     expect(getNextDayKey("2025-02-28")).toBe("2025-03-01");
+  });
+});
+
+describe("getPreviousDayKey", () => {
+  it("正常系: 前日を返す", () => {
+    expect(getPreviousDayKey("2026-01-15")).toBe("2026-01-14");
+  });
+
+  it("境界値: 月初 → 前月末日", () => {
+    expect(getPreviousDayKey("2026-02-01")).toBe("2026-01-31");
+  });
+
+  it("境界値: 年初 → 前年末日", () => {
+    expect(getPreviousDayKey("2026-01-01")).toBe("2025-12-31");
+  });
+
+  it("境界値: うるう年の3月1日 → 2月29日", () => {
+    expect(getPreviousDayKey("2024-03-01")).toBe("2024-02-29");
+  });
+
+  it("境界値: 非うるう年の3月1日 → 2月28日", () => {
+    expect(getPreviousDayKey("2025-03-01")).toBe("2025-02-28");
+  });
+});
+
+describe("isValidDayKey", () => {
+  it("正常系: 有効なdayKey", () => {
+    expect(isValidDayKey("2026-01-15")).toBe(true);
+    expect(isValidDayKey("2024-02-29")).toBe(true); // うるう年
+  });
+
+  it("異常系: 形式が不正", () => {
+    expect(isValidDayKey("2026/01/15")).toBe(false);
+    expect(isValidDayKey("20260115")).toBe(false);
+    expect(isValidDayKey("2026-1-15")).toBe(false);
+    expect(isValidDayKey("26-01-15")).toBe(false);
+    expect(isValidDayKey("")).toBe(false);
+    expect(isValidDayKey("invalid")).toBe(false);
+  });
+
+  it("異常系: 存在しない日付", () => {
+    expect(isValidDayKey("2026-02-30")).toBe(false);
+    expect(isValidDayKey("2026-13-01")).toBe(false);
+    expect(isValidDayKey("2025-02-29")).toBe(false); // 非うるう年の2/29
+    expect(isValidDayKey("2026-04-31")).toBe(false);
   });
 });
 
