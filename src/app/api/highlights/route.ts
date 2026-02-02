@@ -8,13 +8,6 @@ import {
   parseDayKey,
 } from '@/lib/date'
 
-type CategorySummary = {
-  id: string
-  name: string
-  order: number
-  rankWindowDays: number
-}
-
 type SeasonalTitleSummary = {
   categoryId: string
   label: string
@@ -70,6 +63,7 @@ export async function GET() {
           node: { tree: { category: { visible: true } } },
         },
         orderBy: { unlockedAt: 'desc' },
+        take: 20,
         select: {
           unlockedAt: true,
           node: {
@@ -82,7 +76,6 @@ export async function GET() {
                     select: {
                       id: true,
                       name: true,
-                      visible: true,
                     },
                   },
                 },
@@ -192,14 +185,12 @@ export async function GET() {
       return acc
     }, [])
 
-    const unlockedNodes = unlockedNodesRaw
-      .filter((node) => node.node.tree.category.visible)
-      .map((node) => ({
-        id: node.node.id,
-        name: node.node.title,
-        unlockedAt: formatDayKey(node.unlockedAt),
-        categoryName: node.node.tree.category.name,
-      }))
+    const unlockedNodes = unlockedNodesRaw.map((node) => ({
+      id: node.node.id,
+      name: node.node.title,
+      unlockedAt: formatDayKey(node.unlockedAt),
+      categoryName: node.node.tree.category.name,
+    }))
 
     return NextResponse.json({
       unlockedNodes,
