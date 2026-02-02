@@ -4,6 +4,8 @@ export {
   formatRankWindowRange,
   getTodayKey,
   getNextDayKey,
+  getPreviousDayKey,
   getRecentDayKeys,
+  isValidDayKey,
   parseDayKey,
 } from "./day-key";

@@ -65,6 +65,38 @@ export function getNextDayKey(dayKey: string): string {
 }
 
 /**
+ * 指定されたdayKeyの前日を取得
+ * @param dayKey - 基準となるdayKey
+ * @returns 前日のdayKey文字列
+ */
+export function getPreviousDayKey(dayKey: string): string {
+  const date = new Date(`${dayKey}T00:00:00+09:00`);
+  date.setDate(date.getDate() - 1);
+  return formatInTimeZone(date, DEFAULT_TIMEZONE, "yyyy-MM-dd");
+}
+
+/**
+ * dayKey形式の正規表現パターン
+ */
+const dayKeyRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * 文字列が有効なdayKey形式かどうかを検証
+ * @param value - 検証する文字列
+ * @returns 有効なdayKeyであればtrue
+ */
+export function isValidDayKey(value: string): boolean {
+  if (!dayKeyRegex.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
+  );
+}
+
+/**
  * 直近N日分のdayKey配列を取得（今日を含む）
  * @param days - 取得する日数（0以上）
  * @returns dayKeyの配列（新しい日付順）

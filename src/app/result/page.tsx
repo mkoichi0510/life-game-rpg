@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { formatInTimeZone } from "date-fns-tz";
 import { ja } from "date-fns/locale";
 import {
@@ -24,10 +25,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DateNav } from "@/components/result";
 import { cn } from "@/lib/utils";
 import { getCategoryColor, getCategoryIcon } from "@/lib/category-ui";
 import { DAILY_RESULT_STATUS } from "@/lib/constants";
-import { parseDayKey, DEFAULT_TIMEZONE } from "@/lib/date";
+import { parseDayKey, DEFAULT_TIMEZONE, isValidDayKey } from "@/lib/date";
 import { formatPlayLabel } from "@/lib/format";
 import { useTodayKey } from "@/lib/hooks/use-today-key";
 import { showDayConfirmed, showError } from "@/lib/toast";
@@ -42,12 +44,6 @@ import {
 } from "@/lib/api-client/client";
 import { getUserMessage } from "@/lib/api-client/errors";
 
-function formatDayLabel(dayKey: string): string {
-  return formatInTimeZone(parseDayKey(dayKey), DEFAULT_TIMEZONE, "yyyy年M月d日（EEE）", {
-    locale: ja,
-  });
-}
-
 function formatTimeLabel(isoString: string): string {
   return formatInTimeZone(new Date(isoString), DEFAULT_TIMEZONE, "HH:mm", {
     locale: ja,
@@ -55,7 +51,20 @@ function formatTimeLabel(isoString: string): string {
 }
 
 export default function ResultPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const todayKey = useTodayKey();
+
+  const dateParam = searchParams.get("date");
+  const currentDayKey = useMemo(() => {
+    if (dateParam && isValidDayKey(dateParam) && dateParam <= todayKey) {
+      return dateParam;
+    }
+    return todayKey;
+  }, [dateParam, todayKey]);
+
+  const isToday = currentDayKey === todayKey;
+
   const [dailyResult, setDailyResult] = useState<DailyResult | null>(null);
   const [categoryResults, setCategoryResults] = useState<DailyCategoryResult[]>([]);
   const [playLogs, setPlayLogs] = useState<PlayLog[]>([]);
@@ -107,8 +116,8 @@ export default function ResultPage() {
     setError(null);
     try {
       const [dailyResultResponse, playLogsResponse] = await Promise.all([
-        fetchDailyResult(todayKey),
-        fetchPlayLogs(todayKey),
+        fetchDailyResult(currentDayKey),
+        fetchPlayLogs(currentDayKey),
       ]);
       setDailyResult(dailyResultResponse.dailyResult);
       setCategoryResults(dailyResultResponse.categoryResults);
@@ -121,11 +130,19 @@ export default function ResultPage() {
     } finally {
       setLoading(false);
     }
-  }, [todayKey]);
+  }, [currentDayKey]);
 
   useEffect(() => {
     loadResult();
   }, [loadResult]);
+
+  const handleDateChange = useCallback((newDayKey: string) => {
+    if (newDayKey === todayKey) {
+      router.push("/result");
+    } else {
+      router.push(`/result?date=${newDayKey}`);
+    }
+  }, [router, todayKey]);
 
   const handleConfirm = async () => {
     if (!dailyResult || isConfirmed) return;
@@ -341,7 +358,7 @@ export default function ResultPage() {
                       )}
                     </div>
                   </div>
-                  {!isConfirmed && (
+                  {!isConfirmed && isToday && (
                     <Button
                       variant="ghost"
                       size="icon"
@@ -369,7 +386,7 @@ export default function ResultPage() {
     </Card>
   );
 
-  const confirmDialog = (
+  const confirmDialog = isToday && (
     <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
       <DialogTrigger asChild>
         <Button
@@ -491,7 +508,9 @@ export default function ResultPage() {
             </Link>
           </Button>
           <div>
-            <p className="text-sm text-muted-foreground">今日のリザルト</p>
+            <p className="text-sm text-muted-foreground">
+              {isToday ? "今日のリザルト" : "過去のリザルト"}
+            </p>
             <h1 className="text-xl font-bold tracking-tight">リザルト</h1>
           </div>
         </div>
@@ -509,14 +528,15 @@ export default function ResultPage() {
       </div>
 
       <Card>
-        <CardHeader className="space-y-2">
-          <CardTitle className="text-base">今日の日付</CardTitle>
+        <CardHeader className="flex flex-col items-center space-y-2">
           {loading ? (
-            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-8 w-52" />
           ) : (
-            <p className="text-lg font-semibold">
-              {dailyResult ? formatDayLabel(dailyResult.dayKey) : formatDayLabel(todayKey)}
-            </p>
+            <DateNav
+              currentDayKey={currentDayKey}
+              todayKey={todayKey}
+              onDateChange={handleDateChange}
+            />
           )}
         </CardHeader>
       </Card>
@@ -535,7 +555,9 @@ export default function ResultPage() {
           </div>
         ) : (
           <div className="text-xs text-muted-foreground">
-            確定は当日のみ実行できます。過去分は自動確定されます。
+            {isToday
+              ? "確定は当日のみ実行できます。過去分は自動確定されます。"
+              : "過去の日付は確定済み、または自動確定されます。"}
           </div>
         )}
         {confirmDialog}
