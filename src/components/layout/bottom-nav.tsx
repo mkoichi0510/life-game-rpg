@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardList, Home, PlusCircle, Sparkles } from "lucide-react";
+import { ClipboardList, Home, PlusCircle, Settings, Sparkles } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { exactMatch, prefixMatch } from "./nav-utils";
@@ -33,6 +33,12 @@ const navItems: readonly NavItem[] = [
     label: "スキル",
     Icon: Sparkles,
     match: (path) => prefixMatch(path, "/skills"),
+  },
+  {
+    href: "/settings",
+    label: "設定",
+    Icon: Settings,
+    match: (path) => prefixMatch(path, "/settings"),
   },
 ];
 
