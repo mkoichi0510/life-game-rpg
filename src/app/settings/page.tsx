@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ArrowRight, FolderPlus, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,11 +25,9 @@ export default function SettingsPage() {
             <p className="text-sm text-muted-foreground">
               追加UIは準備中です。まずは導線のみ用意しています。
             </p>
-            <Button asChild variant="outline">
-              <Link href="#categories" aria-label="カテゴリ管理セクションへ">
-                カテゴリ管理へ
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
+            <Button variant="outline" disabled>
+              カテゴリ管理へ
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </CardContent>
         </Card>
@@ -49,11 +46,9 @@ export default function SettingsPage() {
             <p className="text-sm text-muted-foreground">
               追加UIは準備中です。まずは導線のみ用意しています。
             </p>
-            <Button asChild variant="outline">
-              <Link href="#actions" aria-label="アクション管理セクションへ">
-                アクション管理へ
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
+            <Button variant="outline" disabled>
+              アクション管理へ
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </CardContent>
         </Card>
