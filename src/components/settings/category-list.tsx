@@ -1,10 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { Plus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { type Category } from "@/lib/api-client/client";
 import { getCategoryColor, getCategoryIcon } from "@/lib/category-ui";
 
@@ -12,9 +13,15 @@ type CategoryListProps = {
   categories: Category[];
   isLoading?: boolean;
   onAddClick: () => void;
+  onToggleVisible: (id: string, visible: boolean) => Promise<void>;
 };
 
-export function CategoryList({ categories, isLoading, onAddClick }: CategoryListProps) {
+export function CategoryList({
+  categories,
+  isLoading,
+  onAddClick,
+  onToggleVisible,
+}: CategoryListProps) {
   if (isLoading) {
     return <CategoryListSkeleton />;
   }
@@ -35,7 +42,11 @@ export function CategoryList({ categories, isLoading, onAddClick }: CategoryList
           </p>
         ) : (
           categories.map((category) => (
-            <CategoryItem key={category.id} category={category} />
+            <CategoryItem
+              key={category.id}
+              category={category}
+              onToggleVisible={onToggleVisible}
+            />
           ))
         )}
       </CardContent>
@@ -43,12 +54,31 @@ export function CategoryList({ categories, isLoading, onAddClick }: CategoryList
   );
 }
 
-function CategoryItem({ category }: { category: Category }) {
+function CategoryItem({
+  category,
+  onToggleVisible,
+}: {
+  category: Category;
+  onToggleVisible: (id: string, visible: boolean) => Promise<void>;
+}) {
+  const [isPending, setIsPending] = useState(false);
   const color = getCategoryColor(category);
   const Icon = getCategoryIcon(category);
 
+  const handleToggle = async (checked: boolean) => {
+    setIsPending(true);
+    try {
+      await onToggleVisible(category.id, checked);
+    } finally {
+      setIsPending(false);
+    }
+  };
+
   return (
-    <div className="flex items-center justify-between rounded-lg border p-3">
+    <div
+      className="flex items-center justify-between rounded-lg border p-3"
+      data-testid="category-item"
+    >
       <div className="flex items-center gap-3">
         <div
           className="flex h-8 w-8 items-center justify-center rounded-full"
@@ -63,9 +93,17 @@ function CategoryItem({ category }: { category: Category }) {
           </p>
         </div>
       </div>
-      <Badge variant={category.visible ? "default" : "secondary"}>
-        {category.visible ? "表示" : "非表示"}
-      </Badge>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground">
+          {category.visible ? "表示" : "非表示"}
+        </span>
+        <Switch
+          checked={category.visible}
+          onCheckedChange={handleToggle}
+          disabled={isPending}
+          aria-label={`${category.name}の表示切り替え`}
+        />
+      </div>
     </div>
   );
 }
@@ -87,7 +125,7 @@ function CategoryListSkeleton() {
                 <Skeleton className="h-3 w-16" />
               </div>
             </div>
-            <Skeleton className="h-5 w-12" />
+            <Skeleton className="h-6 w-11" />
           </div>
         ))}
       </CardContent>

@@ -33,3 +33,13 @@ export const createCategorySchema = z.object({
 })
 
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>
+
+export const updateCategorySchema = z.object({
+  visible: z.boolean().optional(),
+})
+
+export const categoryIdParamSchema = z.object({
+  id: z.string().min(1, 'カテゴリIDは必須です'),
+})
+
+export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>

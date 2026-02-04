@@ -251,3 +251,13 @@ export function createCategory(input: {
     body: JSON.stringify(input),
   });
 }
+
+export function updateCategory(id: string, input: { visible?: boolean }) {
+  return requestJson<{ category: Category }>(
+    `/api/categories/${encodeURIComponent(id)}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }
+  );
+}

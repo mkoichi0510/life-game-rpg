@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +12,12 @@ import {
 } from "@/components/ui/dialog";
 import { CategoryForm, type CategoryFormValues } from "@/components/settings/category-form";
 import { CategoryList } from "@/components/settings/category-list";
-import { createCategory, fetchCategories, type Category } from "@/lib/api-client/client";
+import {
+  createCategory,
+  fetchCategories,
+  updateCategory,
+  type Category,
+} from "@/lib/api-client/client";
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -48,7 +52,11 @@ export default function CategoriesPage() {
   const handleSubmit = async (values: CategoryFormValues) => {
     setIsSubmitting(true);
     try {
-      await createCategory(values);
+      await createCategory({
+        name: values.name,
+        visible: values.visible,
+        xpPerPlay: values.xpPerPlay,
+      });
       toast.success("カテゴリを追加しました");
       setIsDialogOpen(false);
       await loadCategories();
@@ -57,6 +65,17 @@ export default function CategoriesPage() {
       toast.error("カテゴリの追加に失敗しました");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleToggleVisible = async (id: string, visible: boolean) => {
+    try {
+      await updateCategory(id, { visible });
+      toast.success(visible ? "カテゴリを表示しました" : "カテゴリを非表示にしました");
+      await loadCategories();
+    } catch (error) {
+      console.error("Failed to update category:", error);
+      toast.error("表示設定の変更に失敗しました");
     }
   };
 
@@ -77,6 +96,7 @@ export default function CategoriesPage() {
         categories={categories}
         isLoading={isLoading}
         onAddClick={handleAddClick}
+        onToggleVisible={handleToggleVisible}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
