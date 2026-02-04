@@ -240,3 +240,24 @@ export function fetchCurrentSeasonalTitle(categoryId: string) {
 export function fetchHighlights() {
   return requestJson<HighlightsResponse>("/api/highlights");
 }
+
+export function createCategory(input: {
+  name: string;
+  visible?: boolean;
+  xpPerPlay?: number;
+}) {
+  return requestJson<{ category: Category }>("/api/categories", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function updateCategory(id: string, input: { visible?: boolean }) {
+  return requestJson<{ category: Category }>(
+    `/api/categories/${encodeURIComponent(id)}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }
+  );
+}
