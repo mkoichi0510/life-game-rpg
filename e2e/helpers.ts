@@ -28,6 +28,16 @@ export async function goSkills(page: Page) {
   await expect(page.getByRole("heading", { name: "スキルツリーを見る" })).toBeVisible();
 }
 
+export async function goSettings(page: Page) {
+  await page.goto("/settings");
+  await expect(page.getByRole("heading", { name: "設定" })).toBeVisible();
+}
+
+export async function goSettingsCategories(page: Page) {
+  await page.goto("/settings/categories");
+  await expect(page.getByRole("heading", { name: "カテゴリ管理" })).toBeVisible();
+}
+
 export async function registerPlay(
   page: Page,
   categoryId: string,
