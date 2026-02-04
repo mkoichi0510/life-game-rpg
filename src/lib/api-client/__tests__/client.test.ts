@@ -4,6 +4,7 @@ import {
   fetchActions,
   fetchDailyResult,
   fetchPlayLogs,
+  createAction,
   createPlay,
   deletePlayLog,
   confirmDailyResult,
@@ -69,6 +70,32 @@ describe("fetchActions", () => {
       "/api/actions?categoryId=cat-1&visible=true",
       expect.anything()
     );
+  });
+});
+
+describe("createAction", () => {
+  it("sends POST with JSON body and Content-Type", async () => {
+    const payload = { action: { id: "a1" } };
+    mockFetch.mockResolvedValue(jsonResponse(payload, 201));
+
+    const result = await createAction({
+      categoryId: "cat-1",
+      label: "ランニング",
+      unit: "分",
+      order: 3,
+    });
+
+    const [url, init] = mockFetch.mock.calls[0];
+    expect(url).toBe("/api/actions");
+    expect(init.method).toBe("POST");
+    expect(init.headers["Content-Type"]).toBe("application/json");
+    expect(JSON.parse(init.body)).toEqual({
+      categoryId: "cat-1",
+      label: "ランニング",
+      unit: "分",
+      order: 3,
+    });
+    expect(result).toEqual(payload);
   });
 });
 

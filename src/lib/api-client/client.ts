@@ -241,6 +241,18 @@ export function fetchHighlights() {
   return requestJson<HighlightsResponse>("/api/highlights");
 }
 
+export function createAction(input: {
+  categoryId: string;
+  label: string;
+  unit?: string;
+  order?: number;
+}) {
+  return requestJson<{ action: Action }>("/api/actions", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
 export function createCategory(input: {
   name: string;
   visible?: boolean;
