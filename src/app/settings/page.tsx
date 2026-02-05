@@ -47,11 +47,13 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-muted-foreground">
-              追加UIは準備中です。まずは導線のみ用意しています。
+              カテゴリに紐づくアクションの追加・確認を行います。
             </p>
-            <Button variant="outline" disabled>
-              アクション管理へ
-              <ArrowRight className="ml-2 h-4 w-4" />
+            <Button variant="outline" asChild>
+              <Link href="/settings/actions">
+                アクション管理へ
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
             </Button>
           </CardContent>
         </Card>

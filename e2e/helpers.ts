@@ -38,6 +38,11 @@ export async function goSettingsCategories(page: Page) {
   await expect(page.getByRole("heading", { name: "カテゴリ管理" })).toBeVisible();
 }
 
+export async function goSettingsActions(page: Page) {
+  await page.goto("/settings/actions");
+  await expect(page.getByRole("heading", { name: "アクション管理" })).toBeVisible();
+}
+
 export async function registerPlay(
   page: Page,
   categoryId: string,

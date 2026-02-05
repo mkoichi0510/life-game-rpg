@@ -24,6 +24,7 @@ export default function CategoriesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dialogKey, setDialogKey] = useState(0);
 
   const loadCategories = useCallback(async () => {
     try {
@@ -42,6 +43,7 @@ export default function CategoriesPage() {
   }, [loadCategories]);
 
   const handleAddClick = () => {
+    setDialogKey((k) => k + 1);
     setIsDialogOpen(true);
   };
 
@@ -105,6 +107,7 @@ export default function CategoriesPage() {
             <DialogTitle>カテゴリを追加</DialogTitle>
           </DialogHeader>
           <CategoryForm
+            key={dialogKey}
             onSubmit={handleSubmit}
             onCancel={handleDialogClose}
             isSubmitting={isSubmitting}
