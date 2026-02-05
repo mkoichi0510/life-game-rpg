@@ -5,6 +5,7 @@ import {
   formatZodError,
 } from '@/lib/validations/helpers'
 import { requireCategory, isCategoryFailure } from '@/lib/api/requireCategory'
+import { requireUser, isUserFailure } from '@/lib/api/requireUser'
 
 /**
  * GET /api/player/states/:categoryId
@@ -15,6 +16,11 @@ export async function GET(
   { params }: { params: Promise<{ categoryId?: string }> }
 ) {
   try {
+    const userResult = await requireUser()
+    if (isUserFailure(userResult)) {
+      return userResult.response
+    }
+
     const { categoryId } = await params
     const result = categoryIdParamSchema.safeParse({
       categoryId: categoryId ?? '',
@@ -24,7 +30,10 @@ export async function GET(
       return formatZodError(result.error)
     }
 
-    const categoryResult = await requireCategory(result.data.categoryId, {
+    const categoryResult = await requireCategory(
+      userResult.userId,
+      result.data.categoryId,
+      {
       id: true,
       name: true,
       order: true,
@@ -38,7 +47,8 @@ export async function GET(
           updatedAt: true,
         },
       },
-    })
+      }
+    )
     if (isCategoryFailure(categoryResult)) {
       return categoryResult.response
     }

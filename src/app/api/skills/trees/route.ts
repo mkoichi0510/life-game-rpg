@@ -6,6 +6,7 @@ import {
   formatInternalError,
 } from '@/lib/validations/helpers'
 import { requireCategory, isCategoryFailure } from '@/lib/api/requireCategory'
+import { requireUser, isUserFailure } from '@/lib/api/requireUser'
 
 /**
  * GET /api/skills/trees
@@ -16,6 +17,11 @@ import { requireCategory, isCategoryFailure } from '@/lib/api/requireCategory'
  */
 export async function GET(request: NextRequest) {
   try {
+    const userResult = await requireUser()
+    if (isUserFailure(userResult)) {
+      return userResult.response
+    }
+
     const { searchParams } = new URL(request.url)
     const categoryId = searchParams.get('categoryId') ?? ''
 
@@ -25,7 +31,10 @@ export async function GET(request: NextRequest) {
     }
 
     // カテゴリ存在確認
-    const categoryResult = await requireCategory(result.data.categoryId)
+    const categoryResult = await requireCategory(
+      userResult.userId,
+      result.data.categoryId
+    )
     if (isCategoryFailure(categoryResult)) {
       return categoryResult.response
     }
@@ -33,6 +42,7 @@ export async function GET(request: NextRequest) {
     const visibleOnly = searchParams.get('visible') === 'true'
     const trees = await prisma.skillTree.findMany({
       where: {
+        userId: userResult.userId,
         categoryId: result.data.categoryId,
         ...(visibleOnly && { visible: true }),
       },

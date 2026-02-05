@@ -2,17 +2,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 import { GET, POST } from '../route'
 import { DELETE } from '../[id]/route'
+import { auth } from '@/auth'
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     playLog: {
       findMany: vi.fn(),
-      findUnique: vi.fn(),
+      findFirst: vi.fn(),
       create: vi.fn(),
       delete: vi.fn(),
     },
     action: {
-      findUnique: vi.fn(),
+      findFirst: vi.fn(),
     },
     dailyResult: {
       findUnique: vi.fn(),
@@ -44,6 +45,15 @@ const createPostRequest = (body: object): NextRequest => {
 describe('GET /api/plays', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  it('should return 401 when not authenticated', async () => {
+    vi.mocked(auth).mockResolvedValueOnce(null)
+    const request = createGetRequest('http://localhost:3000/api/plays?dayKey=2026-01-24')
+    const response = await GET(request)
+    expect(response.status).toBe(401)
+    const data = await response.json()
+    expect(data.error.code).toBe('UNAUTHORIZED')
   })
 
   it('should return 400 when dayKey is missing', async () => {
@@ -86,7 +96,7 @@ describe('GET /api/plays', () => {
     expect(response.status).toBe(200)
     expect(data.playLogs).toHaveLength(1)
     expect(prisma.playLog.findMany).toHaveBeenCalledWith({
-      where: { dayKey: '2026-01-24' },
+      where: { userId: 'user-1', dayKey: '2026-01-24' },
       orderBy: [{ at: 'asc' }, { id: 'asc' }],
       include: expect.any(Object),
     })
@@ -123,6 +133,7 @@ describe('GET /api/plays', () => {
     expect(data.playLogs).toHaveLength(1)
     expect(prisma.playLog.findMany).toHaveBeenCalledWith({
       where: {
+        userId: 'user-1',
         dayKey: '2026-01-24',
         action: { categoryId: 'cat-1' },
       },
@@ -137,6 +148,15 @@ describe('POST /api/plays', () => {
     vi.clearAllMocks()
   })
 
+  it('should return 401 when not authenticated', async () => {
+    vi.mocked(auth).mockResolvedValueOnce(null)
+    const request = createPostRequest({ actionId: 'action-1' })
+    const response = await POST(request)
+    expect(response.status).toBe(401)
+    const data = await response.json()
+    expect(data.error.code).toBe('UNAUTHORIZED')
+  })
+
   it('should return 400 when actionId is missing', async () => {
     const request = createPostRequest({ note: 'test' })
     const response = await POST(request)
@@ -148,7 +168,7 @@ describe('POST /api/plays', () => {
   })
 
   it('should return 404 when action does not exist', async () => {
-    vi.mocked(prisma.action.findUnique).mockResolvedValue(null)
+    vi.mocked(prisma.action.findFirst).mockResolvedValue(null)
 
     const request = createPostRequest({ actionId: 'missing' })
     const response = await POST(request)
@@ -170,7 +190,7 @@ describe('POST /api/plays', () => {
       },
     }
 
-    vi.mocked(prisma.action.findUnique).mockResolvedValue(mockAction)
+    vi.mocked(prisma.action.findFirst).mockResolvedValue(mockAction)
     vi.mocked(prisma.dailyResult.findUnique).mockResolvedValue({
       status: 'draft',
     })
@@ -196,7 +216,7 @@ describe('POST /api/plays', () => {
       },
     }
 
-    vi.mocked(prisma.action.findUnique).mockResolvedValue(mockAction)
+    vi.mocked(prisma.action.findFirst).mockResolvedValue(mockAction)
     vi.mocked(prisma.dailyResult.findUnique).mockResolvedValue({
       status: 'draft',
     })
@@ -222,7 +242,7 @@ describe('POST /api/plays', () => {
       },
     }
 
-    vi.mocked(prisma.action.findUnique).mockResolvedValue(mockAction)
+    vi.mocked(prisma.action.findFirst).mockResolvedValue(mockAction)
     vi.mocked(prisma.dailyResult.findUnique).mockResolvedValue({
       status: 'draft',
     })
@@ -259,7 +279,7 @@ describe('POST /api/plays', () => {
       },
     }
 
-    vi.mocked(prisma.action.findUnique).mockResolvedValue(mockAction)
+    vi.mocked(prisma.action.findFirst).mockResolvedValue(mockAction)
     vi.mocked(prisma.dailyResult.findUnique).mockResolvedValue({
       status: 'draft',
     })
@@ -319,7 +339,7 @@ describe('POST /api/plays', () => {
       },
     }
 
-    vi.mocked(prisma.action.findUnique).mockResolvedValue(mockAction)
+    vi.mocked(prisma.action.findFirst).mockResolvedValue(mockAction)
     vi.mocked(prisma.dailyResult.findUnique).mockResolvedValue({
       status: 'confirmed',
     })
@@ -382,7 +402,7 @@ describe('DELETE /api/plays/:id', () => {
   })
 
   it('should block delete when day is confirmed', async () => {
-    vi.mocked(prisma.playLog.findUnique).mockResolvedValue({
+    vi.mocked(prisma.playLog.findFirst).mockResolvedValue({
       id: 'play-1',
       dayKey: '2026-01-24',
       action: {
@@ -415,7 +435,7 @@ describe('DELETE /api/plays/:id', () => {
       },
     }
 
-    vi.mocked(prisma.playLog.findUnique).mockResolvedValue({
+    vi.mocked(prisma.playLog.findFirst).mockResolvedValue({
       id: 'play-1',
       dayKey: '2026-01-24',
       action: {

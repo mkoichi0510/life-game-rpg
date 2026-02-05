@@ -7,6 +7,7 @@ import {
   formatInternalError,
 } from '@/lib/validations/helpers'
 import { mapNodeWithUnlockStatus } from '@/lib/mappers/skillNode'
+import { requireUser, isUserFailure } from '@/lib/api/requireUser'
 
 /**
  * GET /api/skills/trees/:id
@@ -17,19 +18,25 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userResult = await requireUser()
+    if (isUserFailure(userResult)) {
+      return userResult.response
+    }
+
     const { id } = await params
     const result = skillTreeIdParamSchema.safeParse({ id })
     if (!result.success) {
       return formatZodError(result.error)
     }
 
-    const tree = await prisma.skillTree.findUnique({
-      where: { id: result.data.id },
+    const tree = await prisma.skillTree.findFirst({
+      where: { id: result.data.id, userId: userResult.userId },
       include: {
         skillNodes: {
           orderBy: [{ order: 'asc' }, { id: 'asc' }],
           include: {
             unlockedNodes: {
+              where: { userId: userResult.userId },
               select: {
                 id: true,
                 unlockedAt: true,

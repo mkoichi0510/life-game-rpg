@@ -16,6 +16,8 @@ vi.mock('@/lib/prisma', () => ({
 
 import { prisma } from '@/lib/prisma'
 
+const userId = 'user-1'
+
 describe('unlockNode', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -25,20 +27,22 @@ describe('unlockNode', () => {
     vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
       const tx = {
         skillNode: {
-          findUnique: vi.fn().mockResolvedValue(null),
+          findFirst: vi.fn().mockResolvedValue(null),
         },
       }
       return callback(tx as unknown as Parameters<typeof callback>[0])
     })
 
-    await expect(unlockNode('node-x')).rejects.toThrow(SkillNodeNotFoundError)
+    await expect(unlockNode(userId, 'node-x')).rejects.toThrow(
+      SkillNodeNotFoundError
+    )
   })
 
   it('should throw AlreadyUnlockedError when node already unlocked', async () => {
     vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
       const tx = {
         skillNode: {
-          findUnique: vi.fn().mockResolvedValue({
+          findFirst: vi.fn().mockResolvedValue({
             id: 'node-1',
             treeId: 'tree-1',
             order: 1,
@@ -51,14 +55,16 @@ describe('unlockNode', () => {
       return callback(tx as unknown as Parameters<typeof callback>[0])
     })
 
-    await expect(unlockNode('node-1')).rejects.toThrow(AlreadyUnlockedError)
+    await expect(unlockNode(userId, 'node-1')).rejects.toThrow(
+      AlreadyUnlockedError
+    )
   })
 
   it('should throw PlayerStateNotFoundError when player state is missing', async () => {
     vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
       const tx = {
         skillNode: {
-          findUnique: vi.fn().mockResolvedValue({
+          findFirst: vi.fn().mockResolvedValue({
             id: 'node-1',
             treeId: 'tree-1',
             order: 1,
@@ -71,14 +77,16 @@ describe('unlockNode', () => {
       return callback(tx as unknown as Parameters<typeof callback>[0])
     })
 
-    await expect(unlockNode('node-1')).rejects.toThrow(PlayerStateNotFoundError)
+    await expect(unlockNode(userId, 'node-1')).rejects.toThrow(
+      PlayerStateNotFoundError
+    )
   })
 
   it('should throw InsufficientSpError when sp is insufficient', async () => {
     vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
       const tx = {
         skillNode: {
-          findUnique: vi.fn().mockResolvedValue({
+          findFirst: vi.fn().mockResolvedValue({
             id: 'node-1',
             treeId: 'tree-1',
             order: 1,
@@ -94,45 +102,47 @@ describe('unlockNode', () => {
       return callback(tx as unknown as Parameters<typeof callback>[0])
     })
 
-    await expect(unlockNode('node-1')).rejects.toThrow(InsufficientSpError)
+    await expect(unlockNode(userId, 'node-1')).rejects.toThrow(
+      InsufficientSpError
+    )
   })
 
   it('should throw PrerequisiteNotMetError when previous node is not unlocked', async () => {
     vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
       const tx = {
         skillNode: {
-          findUnique: vi
-            .fn()
-            .mockResolvedValueOnce({
-              id: 'node-2',
-              treeId: 'tree-1',
-              order: 2,
-              costSp: 3,
-              unlockedNodes: [],
-              tree: {
-                categoryId: 'cat-1',
-                category: { playerState: { spUnspent: 10 } },
-              },
-            })
-            .mockResolvedValueOnce({
-              id: 'node-1',
-              treeId: 'tree-1',
-              order: 1,
-              unlockedNodes: [],
-            }),
+          findFirst: vi.fn().mockResolvedValue({
+            id: 'node-2',
+            treeId: 'tree-1',
+            order: 2,
+            costSp: 3,
+            unlockedNodes: [],
+            tree: {
+              categoryId: 'cat-1',
+              category: { playerState: { spUnspent: 10 } },
+            },
+          }),
+          findUnique: vi.fn().mockResolvedValue({
+            id: 'node-1',
+            treeId: 'tree-1',
+            order: 1,
+            unlockedNodes: [],
+          }),
         },
       }
       return callback(tx as unknown as Parameters<typeof callback>[0])
     })
 
-    await expect(unlockNode('node-2')).rejects.toThrow(PrerequisiteNotMetError)
+    await expect(unlockNode(userId, 'node-2')).rejects.toThrow(
+      PrerequisiteNotMetError
+    )
   })
 
   it('should unlock node and create spend log', async () => {
     vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
       const tx = {
         skillNode: {
-          findUnique: vi.fn().mockResolvedValue({
+          findFirst: vi.fn().mockResolvedValue({
             id: 'node-1',
             treeId: 'tree-1',
             order: 1,
@@ -161,7 +171,7 @@ describe('unlockNode', () => {
       return callback(tx as unknown as Parameters<typeof callback>[0])
     })
 
-    const result = await unlockNode('node-1')
+    const result = await unlockNode(userId, 'node-1')
 
     expect(result.unlockedNode.nodeId).toBe('node-1')
     expect(result.categoryId).toBe('cat-1')

@@ -61,6 +61,18 @@ export function formatInternalError(message: string) {
   )
 }
 
+export function formatUnauthorizedError(message = '認証が必要です') {
+  return NextResponse.json(
+    {
+      error: {
+        code: 'UNAUTHORIZED',
+        message,
+      },
+    },
+    { status: 401 }
+  )
+}
+
 export function formatInvalidOperationError(
   message: string,
   details?: ErrorDetails

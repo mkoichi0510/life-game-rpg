@@ -5,11 +5,17 @@ import {
   categoryIdParamSchema,
 } from '@/lib/validations/category'
 import { formatZodError } from '@/lib/validations/helpers'
+import { requireUser, isUserFailure } from '@/lib/api/requireUser'
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const userResult = await requireUser()
+  if (isUserFailure(userResult)) {
+    return userResult.response
+  }
+
   const { id } = await params
 
   // ID検証
@@ -35,7 +41,9 @@ export async function PATCH(
   }
 
   // 存在確認
-  const existing = await prisma.category.findUnique({ where: { id } })
+  const existing = await prisma.category.findFirst({
+    where: { id, userId: userResult.userId },
+  })
   if (!existing) {
     return NextResponse.json(
       { error: { message: 'カテゴリが見つかりません' } },

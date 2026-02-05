@@ -6,7 +6,7 @@ import { NextRequest } from 'next/server'
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     category: {
-      findUnique: vi.fn(),
+      findFirst: vi.fn(),
       update: vi.fn(),
     },
   },
@@ -42,7 +42,7 @@ describe('PATCH /api/categories/[id]', () => {
   }
 
   it('should update visible from true to false', async () => {
-    vi.mocked(prisma.category.findUnique).mockResolvedValue(mockCategory)
+    vi.mocked(prisma.category.findFirst).mockResolvedValue(mockCategory)
     vi.mocked(prisma.category.update).mockResolvedValue({
       ...mockCategory,
       visible: false,
@@ -64,7 +64,7 @@ describe('PATCH /api/categories/[id]', () => {
 
   it('should update visible from false to true', async () => {
     const hiddenCategory = { ...mockCategory, visible: false }
-    vi.mocked(prisma.category.findUnique).mockResolvedValue(hiddenCategory)
+    vi.mocked(prisma.category.findFirst).mockResolvedValue(hiddenCategory)
     vi.mocked(prisma.category.update).mockResolvedValue({
       ...hiddenCategory,
       visible: true,
@@ -85,7 +85,7 @@ describe('PATCH /api/categories/[id]', () => {
   })
 
   it('should return 404 when category does not exist', async () => {
-    vi.mocked(prisma.category.findUnique).mockResolvedValue(null)
+    vi.mocked(prisma.category.findFirst).mockResolvedValue(null)
 
     const request = createRequest({ visible: false })
     const response = await PATCH(request, {
@@ -110,7 +110,7 @@ describe('PATCH /api/categories/[id]', () => {
   })
 
   it('should return 400 when visible is not boolean', async () => {
-    vi.mocked(prisma.category.findUnique).mockResolvedValue(mockCategory)
+    vi.mocked(prisma.category.findFirst).mockResolvedValue(mockCategory)
 
     const request = new NextRequest(
       'http://localhost:3000/api/categories/cltest12345678901234567',

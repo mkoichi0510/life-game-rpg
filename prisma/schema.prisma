@@ -13,6 +13,7 @@ datasource db {
 // カテゴリ（ユーザーが自由に作成・編集可能）
 model Category {
   id              String   @id @default(cuid())
+  userId          String
   name            String
   visible         Boolean  @default(true)
   order           Int      @default(0)
@@ -22,6 +23,7 @@ model Category {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  user                 User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   actions              Action[]
   dailyCategoryResults DailyCategoryResult[]
   playerState          PlayerCategoryState?
@@ -29,13 +31,14 @@ model Category {
   seasonalTitles       SeasonalTitle[]
   spendLogs            SpendLog[]
 
-  @@index([visible, order])
+  @@index([userId, visible, order])
 }
 
 // アクション（プレイ定義）
 model Action {
   id         String   @id @default(cuid())
   categoryId String
+  userId     String
   label      String
   unit       String?  // 単位（回、分、km など）
   visible    Boolean  @default(true)
@@ -43,10 +46,11 @@ model Action {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   category Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   playLogs PlayLog[]
 
-  @@index([categoryId, visible, order])
+  @@index([userId, categoryId, visible, order])
 }
 
 // プレイログ
@@ -55,26 +59,32 @@ model PlayLog {
   at       DateTime @default(now()) // ISO datetime
   dayKey   String   // YYYY-MM-DD（ローカル）
   actionId String
+  userId   String
   note     String?
   quantity Int?     // 数量（回数・分など）
   createdAt DateTime @default(now())
 
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   action                Action                 @relation(fields: [actionId], references: [id], onDelete: Cascade)
   dailyCategoryResults  DailyCategoryResult[]
 
-  @@index([dayKey])
-  @@index([actionId])
+  @@index([userId, dayKey])
+  @@index([userId, actionId])
 }
 
 // 日次リザルト（確定状態管理）
 model DailyResult {
-  dayKey      String   @id // YYYY-MM-DD
+  userId      String
+  dayKey      String   // YYYY-MM-DD
   status      String   @default("draft") // "draft" | "confirmed"
   confirmedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  user           User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   categoryResults DailyCategoryResult[]
+
+  @@id([userId, dayKey])
 }
 
 // 日次カテゴリ別リザルト
@@ -82,89 +92,103 @@ model DailyCategoryResult {
   id          String   @id @default(cuid())
   dayKey      String
   categoryId  String
+  userId      String
   playCount   Int      @default(0)
   xpEarned    Int      @default(0)
   spEarned    Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  dailyResult DailyResult @relation(fields: [dayKey], references: [dayKey], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyResult DailyResult @relation(fields: [userId, dayKey], references: [userId, dayKey], onDelete: Cascade)
   category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   playLogs    PlayLog[]
 
-  @@unique([dayKey, categoryId])
-  @@index([categoryId])
+  @@unique([userId, dayKey, categoryId])
+  @@index([userId, categoryId])
 }
 
 // プレイヤーのカテゴリ別ステータス
 model PlayerCategoryState {
   id         String   @id @default(cuid())
   categoryId String   @unique
+  userId     String
   xpTotal    Int      @default(0) // 確定済み累計XP
   spUnspent  Int      @default(0) // 未使用SP
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  @@index([userId])
 }
 
 // スキルツリー（恒久称号）
 model SkillTree {
   id         String   @id @default(cuid())
   categoryId String
+  userId     String
   name       String
   visible    Boolean  @default(true)
   order      Int      @default(0)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   category   Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   skillNodes SkillNode[]
 
-  @@index([categoryId, visible, order])
+  @@index([userId, categoryId, visible, order])
 }
 
 // スキルノード（恒久称号の各段階）
 model SkillNode {
   id        String   @id @default(cuid())
   treeId    String
+  userId    String
   order     Int
   title     String
   costSp    Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   tree          SkillTree      @relation(fields: [treeId], references: [id], onDelete: Cascade)
   unlockedNodes UnlockedNode[]
 
-  @@unique([treeId, order])
-  @@index([treeId, order])
+  @@unique([userId, treeId, order])
+  @@index([userId, treeId, order])
 }
 
 // 解放済みノード
 model UnlockedNode {
   id         String   @id @default(cuid())
   nodeId     String
+  userId     String
   unlockedAt DateTime @default(now())
 
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   node SkillNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
 
-  @@unique([nodeId])
+  @@unique([userId, nodeId])
+  @@index([userId, unlockedAt])
 }
 
 // 週ランク称号（維持・変動型）
 model SeasonalTitle {
   id           String   @id @default(cuid())
   categoryId   String
+  userId       String
   label        String
   minSpEarned  Int      // 直近N日で必要なSP合計
   order        Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-  @@index([categoryId, order])
+  @@index([userId, categoryId, order])
 }
 
 // SP消費履歴
@@ -172,15 +196,17 @@ model SpendLog {
   id         String   @id @default(cuid())
   at         DateTime @default(now())
   categoryId String
+  userId     String
   type       String   // "unlock_node"など
   costSp     Int
   refId      String   // nodeIdなど
   dayKey     String?  // YYYY-MM-DD
   createdAt  DateTime @default(now())
 
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-  @@index([categoryId, at])
+  @@index([userId, categoryId, at])
 }
 
 // Auth.js (NextAuth v5) models
@@ -190,6 +216,18 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+
+  categories           Category[]
+  actions              Action[]
+  playLogs             PlayLog[]
+  dailyResults         DailyResult[]
+  dailyCategoryResults DailyCategoryResult[]
+  playerCategoryStates PlayerCategoryState[]
+  skillTrees           SkillTree[]
+  skillNodes           SkillNode[]
+  unlockedNodes        UnlockedNode[]
+  seasonalTitles       SeasonalTitle[]
+  spendLogs            SpendLog[]
 
   accounts Account[]
   sessions Session[]

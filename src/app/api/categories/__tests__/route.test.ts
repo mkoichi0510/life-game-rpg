@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { GET, POST } from '../route'
 import { NextRequest } from 'next/server'
+import { auth } from '@/auth'
 
 // Prisma クライアントをモック
 vi.mock('@/lib/prisma', () => ({
@@ -21,6 +22,15 @@ const createGetRequest = (url = 'http://localhost:3000/api/categories'): NextReq
 describe('GET /api/categories', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  it('should return 401 when not authenticated', async () => {
+    vi.mocked(auth).mockResolvedValueOnce(null)
+    const request = createGetRequest()
+    const response = await GET(request)
+    expect(response.status).toBe(401)
+    const data = await response.json()
+    expect(data.error.code).toBe('UNAUTHORIZED')
   })
 
   it('should return all categories ordered by id', async () => {
@@ -60,7 +70,7 @@ describe('GET /api/categories', () => {
     expect(data.categories[0].id).toBe('cat-1')
     expect(data.categories[1].id).toBe('cat-2')
     expect(prisma.category.findMany).toHaveBeenCalledWith({
-      where: undefined,
+      where: { userId: 'user-1' },
       orderBy: { id: 'asc' },
     })
   })
@@ -100,7 +110,7 @@ describe('GET /api/categories', () => {
     expect(response.status).toBe(200)
     expect(data.categories).toHaveLength(1)
     expect(prisma.category.findMany).toHaveBeenCalledWith({
-      where: { visible: true },
+      where: { userId: 'user-1', visible: true },
       orderBy: { id: 'asc' },
     })
   })
@@ -140,7 +150,7 @@ describe('GET /api/categories', () => {
     expect(response.status).toBe(200)
     expect(data.categories).toHaveLength(2)
     expect(prisma.category.findMany).toHaveBeenCalledWith({
-      where: undefined,
+      where: { userId: 'user-1' },
       orderBy: { id: 'asc' },
     })
   })
@@ -169,6 +179,15 @@ describe('POST /api/categories', () => {
       headers: { 'Content-Type': 'application/json' },
     })
   }
+
+  it('should return 401 when not authenticated', async () => {
+    vi.mocked(auth).mockResolvedValueOnce(null)
+    const request = createRequest({ name: 'test' })
+    const response = await POST(request)
+    expect(response.status).toBe(401)
+    const data = await response.json()
+    expect(data.error.code).toBe('UNAUTHORIZED')
+  })
 
   it('should create a category with valid data', async () => {
     const mockCategory = {
@@ -222,6 +241,7 @@ describe('POST /api/categories', () => {
     expect(response.status).toBe(201)
     expect(prisma.category.create).toHaveBeenCalledWith({
       data: {
+        userId: 'user-1',
         name: 'カスタムカテゴリ',
         visible: false,
         order: 5,

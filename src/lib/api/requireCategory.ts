@@ -21,23 +21,26 @@ export function isCategoryFailure<T>(
 
 // select未指定の場合のオーバーロード
 export async function requireCategory(
+  userId: string,
   categoryId: string
 ): Promise<RequireCategoryResult<{ id: string }>>
 
 // select指定ありの場合のオーバーロード
 export async function requireCategory<T extends Prisma.CategorySelect>(
+  userId: string,
   categoryId: string,
   select: T
 ): Promise<RequireCategoryResult<Prisma.CategoryGetPayload<{ select: T }>>>
 
 // 実装
 export async function requireCategory<T extends Prisma.CategorySelect>(
+  userId: string,
   categoryId: string,
   select?: T
 ): Promise<RequireCategoryResult<unknown>> {
   // select未指定時はデフォルトで { id: true } を使用
-  const category = await prisma.category.findUnique({
-    where: { id: categoryId },
+  const category = await prisma.category.findFirst({
+    where: { id: categoryId, userId },
     select: select ?? { id: true },
   })
 

@@ -113,6 +113,7 @@ cp .env.local.example .env.local
 ```
 
 `.env.local`ファイルが作成されます。デフォルト設定で問題ありません。
+`DEFAULT_USER_EMAIL` は初期データ作成や既存データ移行に使うため、必ず設定してください。
 
 ## ステップ 4: データベースの起動（手動セットアップの場合）
 
@@ -187,6 +188,8 @@ cp .env.e2e.example .env.e2e
 ```
 
 `.env.e2e`の`DATABASE_URL`をE2E用のDBに向けてください。
+E2Eでは認証をバイパスするため、`.env.e2e`に`E2E_AUTH_BYPASS="1"`と
+`DEFAULT_USER_EMAIL`が設定されていることを確認してください。
 
 ### Playwrightブラウザのインストール
 
@@ -258,6 +261,25 @@ npm run db:push
 # 本番環境では migration を使用
 npm run db:migrate
 ```
+
+### 既存データベースにuserIdを追加する場合
+
+既存のデータベース（Phase 1時代のデータ）にuserIdカラムを追加する場合は、
+以下の手順でマイグレーションを行ってください：
+
+```bash
+# 1. 最初のマイグレーションを適用（userIdをNULLableで追加）
+pnpm prisma migrate deploy
+
+# 2. 既存データにデフォルトユーザーを紐付け
+pnpm tsx prisma/scripts/attach-default-user.ts
+
+# 3. 2つ目のマイグレーションを適用（NOT NULL制約を追加）
+pnpm prisma migrate deploy
+```
+
+**注意**: バックフィルスクリプト実行前にNOT NULL制約を適用すると、
+既存レコードが制約違反でエラーになります。必ず上記の順序で実行してください。
 
 ## 次のステップ
 

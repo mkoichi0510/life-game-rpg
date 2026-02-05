@@ -68,6 +68,7 @@ export function CategoryForm({ onSubmit, onCancel, isSubmitting }: CategoryFormP
           id="xpPerPlay"
           type="number"
           min={1}
+          defaultValue={DEFAULTS.XP_PER_PLAY}
           {...register("xpPerPlay", { valueAsNumber: true })}
           aria-invalid={!!errors.xpPerPlay}
         />

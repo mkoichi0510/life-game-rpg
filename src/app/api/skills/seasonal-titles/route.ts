@@ -6,6 +6,7 @@ import {
   formatInternalError,
 } from '@/lib/validations/helpers'
 import { requireCategory, isCategoryFailure } from '@/lib/api/requireCategory'
+import { requireUser, isUserFailure } from '@/lib/api/requireUser'
 
 /**
  * GET /api/skills/seasonal-titles
@@ -15,6 +16,11 @@ import { requireCategory, isCategoryFailure } from '@/lib/api/requireCategory'
  */
 export async function GET(request: NextRequest) {
   try {
+    const userResult = await requireUser()
+    if (isUserFailure(userResult)) {
+      return userResult.response
+    }
+
     const { searchParams } = new URL(request.url)
     const categoryId = searchParams.get('categoryId') ?? ''
 
@@ -24,13 +30,19 @@ export async function GET(request: NextRequest) {
     }
 
     // カテゴリ存在確認
-    const categoryResult = await requireCategory(result.data.categoryId)
+    const categoryResult = await requireCategory(
+      userResult.userId,
+      result.data.categoryId
+    )
     if (isCategoryFailure(categoryResult)) {
       return categoryResult.response
     }
 
     const titles = await prisma.seasonalTitle.findMany({
-      where: { categoryId: result.data.categoryId },
+      where: {
+        userId: userResult.userId,
+        categoryId: result.data.categoryId,
+      },
       orderBy: [{ order: 'asc' }, { id: 'asc' }],
       select: {
         id: true,

@@ -16,6 +16,7 @@ import {
   SkillNodeNotFoundError,
   PlayerStateNotFoundError,
 } from '@/lib/domains'
+import { requireUser, isUserFailure } from '@/lib/api/requireUser'
 
 /**
  * POST /api/skills/nodes/:id/unlock
@@ -26,6 +27,11 @@ export async function POST(
   { params }: { params: Promise<{ id?: string }> }
 ) {
   try {
+    const userResult = await requireUser()
+    if (isUserFailure(userResult)) {
+      return userResult.response
+    }
+
     const { id } = await params
     const result = skillNodeIdParamSchema.safeParse({ id: id ?? '' })
 
@@ -33,7 +39,7 @@ export async function POST(
       return formatZodError(result.error)
     }
 
-    const data = await unlockNode(result.data.id)
+    const data = await unlockNode(userResult.userId, result.data.id)
     return NextResponse.json({ unlockedNode: data.unlockedNode })
   } catch (error) {
     if (error instanceof SkillNodeNotFoundError) {

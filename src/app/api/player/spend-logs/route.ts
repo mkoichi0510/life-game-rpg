@@ -7,6 +7,7 @@ import {
 } from '@/lib/validations/helpers'
 import { requireCategory, isCategoryFailure } from '@/lib/api/requireCategory'
 import { SPEND_LOG_TYPE } from '@/lib/constants'
+import { requireUser, isUserFailure } from '@/lib/api/requireUser'
 
 /**
  * GET /api/player/spend-logs
@@ -16,6 +17,11 @@ import { SPEND_LOG_TYPE } from '@/lib/constants'
  */
 export async function GET(request: NextRequest) {
   try {
+    const userResult = await requireUser()
+    if (isUserFailure(userResult)) {
+      return userResult.response
+    }
+
     const { searchParams } = new URL(request.url)
     const query = {
       categoryId: searchParams.get('categoryId') ?? undefined,
@@ -29,7 +35,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (result.data.categoryId) {
-      const categoryResult = await requireCategory(result.data.categoryId)
+      const categoryResult = await requireCategory(
+        userResult.userId,
+        result.data.categoryId
+      )
       if (isCategoryFailure(categoryResult)) {
         return categoryResult.response
       }
@@ -44,6 +53,7 @@ export async function GET(request: NextRequest) {
     }
 
     const where = {
+      userId: userResult.userId,
       ...(result.data.categoryId && { categoryId: result.data.categoryId }),
       ...(cursorAt &&
         cursorId && {
@@ -86,7 +96,7 @@ export async function GET(request: NextRequest) {
     const skillNodes =
       nodeIds.length > 0
         ? await prisma.skillNode.findMany({
-            where: { id: { in: nodeIds } },
+            where: { id: { in: nodeIds }, userId: userResult.userId },
             select: {
               id: true,
               title: true,

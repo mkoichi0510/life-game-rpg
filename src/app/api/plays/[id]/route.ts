@@ -8,6 +8,7 @@ import {
   formatNotFoundError,
   formatZodError,
 } from '@/lib/validations/helpers'
+import { requireUser, isUserFailure } from '@/lib/api/requireUser'
 
 /**
  * DELETE /api/plays/:id
@@ -18,6 +19,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id?: string }> }
 ) {
   try {
+    const userResult = await requireUser()
+    if (isUserFailure(userResult)) {
+      return userResult.response
+    }
+
     const { id } = await params
     const result = playIdParamSchema.safeParse({ id: id ?? '' })
 
@@ -25,8 +31,8 @@ export async function DELETE(
       return formatZodError(result.error)
     }
 
-    const playLog = await prisma.playLog.findUnique({
-      where: { id: result.data.id },
+    const playLog = await prisma.playLog.findFirst({
+      where: { id: result.data.id, userId: userResult.userId },
       select: {
         id: true,
         dayKey: true,
@@ -49,7 +55,9 @@ export async function DELETE(
     }
 
     const dailyResult = await prisma.dailyResult.findUnique({
-      where: { dayKey: playLog.dayKey },
+      where: {
+        userId_dayKey: { userId: userResult.userId, dayKey: playLog.dayKey },
+      },
       select: { status: true },
     })
 
@@ -62,7 +70,8 @@ export async function DELETE(
     await prisma.$transaction(async (tx) => {
       const categoryResult = await tx.dailyCategoryResult.findUnique({
         where: {
-          dayKey_categoryId: {
+          userId_dayKey_categoryId: {
+            userId: userResult.userId,
             dayKey: playLog.dayKey,
             categoryId: playLog.action.categoryId,
           },

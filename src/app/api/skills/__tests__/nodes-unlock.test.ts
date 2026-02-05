@@ -9,6 +9,7 @@ import {
   unlockNode,
 } from '@/lib/domains'
 import { POST } from '../nodes/[id]/unlock/route'
+import { auth } from '@/auth'
 
 vi.mock('@/lib/domains', async () => {
   const actual = await vi.importActual<typeof import('@/lib/domains')>(
@@ -27,6 +28,17 @@ function createRequest(url: string): NextRequest {
 describe('POST /api/skills/nodes/:id/unlock', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  it('should return 401 when not authenticated', async () => {
+    vi.mocked(auth).mockResolvedValueOnce(null)
+    const request = createRequest('/api/skills/nodes/node-1/unlock')
+    const response = await POST(request, {
+      params: Promise.resolve({ id: 'node-1' }),
+    })
+    expect(response.status).toBe(401)
+    const data = await response.json()
+    expect(data.error.code).toBe('UNAUTHORIZED')
   })
 
   it('should return VALIDATION_ERROR when id is missing', async () => {
@@ -59,7 +71,7 @@ describe('POST /api/skills/nodes/:id/unlock', () => {
 
     expect(response.status).toBe(200)
     expect(data.unlockedNode.nodeId).toBe('node-1')
-    expect(vi.mocked(unlockNode)).toHaveBeenCalledWith('node-1')
+    expect(vi.mocked(unlockNode)).toHaveBeenCalledWith('user-1', 'node-1')
   })
 
   it('should return NOT_FOUND when node does not exist', async () => {

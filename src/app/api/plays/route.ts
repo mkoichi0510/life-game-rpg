@@ -9,6 +9,7 @@ import {
   formatFieldError,
   formatZodError,
 } from '@/lib/validations/helpers'
+import { requireUser, isUserFailure } from '@/lib/api/requireUser'
 
 const playLogInclude = {
   action: {
@@ -35,6 +36,11 @@ const playLogInclude = {
  */
 export async function GET(request: NextRequest) {
   try {
+    const userResult = await requireUser()
+    if (isUserFailure(userResult)) {
+      return userResult.response
+    }
+
     const { searchParams } = new URL(request.url)
     const query = {
       dayKey: searchParams.get('dayKey') ?? '',
@@ -48,6 +54,7 @@ export async function GET(request: NextRequest) {
 
     const playLogs = await prisma.playLog.findMany({
       where: {
+        userId: userResult.userId,
         dayKey: result.data.dayKey,
         ...(result.data.categoryId && {
           action: { categoryId: result.data.categoryId },
@@ -70,6 +77,11 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const userResult = await requireUser()
+    if (isUserFailure(userResult)) {
+      return userResult.response
+    }
+
     const body = await request.json()
     const result = createPlaySchema.safeParse(body)
 
@@ -77,8 +89,8 @@ export async function POST(request: NextRequest) {
       return formatZodError(result.error)
     }
 
-    const action = await prisma.action.findUnique({
-      where: { id: result.data.actionId },
+    const action = await prisma.action.findFirst({
+      where: { id: result.data.actionId, userId: userResult.userId },
       select: {
         id: true,
         categoryId: true,
@@ -107,7 +119,9 @@ export async function POST(request: NextRequest) {
     const now = new Date()
     const todayKey = getTodayKey()
     const todayResult = await prisma.dailyResult.findUnique({
-      where: { dayKey: todayKey },
+      where: {
+        userId_dayKey: { userId: userResult.userId, dayKey: todayKey },
+      },
       select: { status: true },
     })
 
@@ -118,13 +132,16 @@ export async function POST(request: NextRequest) {
 
     const playLog = await prisma.$transaction(async (tx) => {
       await tx.dailyResult.upsert({
-        where: { dayKey: targetDayKey },
-        create: { dayKey: targetDayKey },
+        where: {
+          userId_dayKey: { userId: userResult.userId, dayKey: targetDayKey },
+        },
+        create: { userId: userResult.userId, dayKey: targetDayKey },
         update: {},
       })
 
       const createdPlayLog = await tx.playLog.create({
         data: {
+          userId: userResult.userId,
           at: now,
           dayKey: targetDayKey,
           actionId: action.id,
@@ -136,7 +153,8 @@ export async function POST(request: NextRequest) {
 
       const existingCategoryResult = await tx.dailyCategoryResult.findUnique({
         where: {
-          dayKey_categoryId: {
+          userId_dayKey_categoryId: {
+            userId: userResult.userId,
             dayKey: targetDayKey,
             categoryId: action.categoryId,
           },
@@ -164,6 +182,7 @@ export async function POST(request: NextRequest) {
       } else {
         await tx.dailyCategoryResult.create({
           data: {
+            userId: userResult.userId,
             dayKey: targetDayKey,
             categoryId: action.categoryId,
             playCount: nextPlayCount,

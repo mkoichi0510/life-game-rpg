@@ -7,6 +7,7 @@ import {
   getRecentDayKeys,
   parseDayKey,
 } from '@/lib/date'
+import { requireUser, isUserFailure } from '@/lib/api/requireUser'
 
 type SeasonalTitleSummary = {
   categoryId: string
@@ -28,8 +29,13 @@ function findTitleLabel(
  */
 export async function GET() {
   try {
+    const userResult = await requireUser()
+    if (isUserFailure(userResult)) {
+      return userResult.response
+    }
+
     const categories = await prisma.category.findMany({
-      where: { visible: true },
+      where: { userId: userResult.userId, visible: true },
       select: {
         id: true,
         name: true,
@@ -52,6 +58,7 @@ export async function GET() {
         ? []
         : prisma.dailyCategoryResult.findMany({
             where: {
+              userId: userResult.userId,
               dayKey: { in: weekDayKeys },
               categoryId: { in: categoryIds },
             },
@@ -59,6 +66,7 @@ export async function GET() {
           }),
       prisma.unlockedNode.findMany({
         where: {
+          userId: userResult.userId,
           unlockedAt: { gte: weekStart, lt: weekEndExclusive },
           node: { tree: { category: { visible: true } } },
         },
@@ -111,6 +119,7 @@ export async function GET() {
         ? []
         : prisma.dailyCategoryResult.findMany({
             where: {
+              userId: userResult.userId,
               dayKey: { in: rankWindowDayKeys },
               categoryId: { in: categoryIds },
             },
@@ -119,7 +128,7 @@ export async function GET() {
       categoryIds.length === 0
         ? []
         : prisma.seasonalTitle.findMany({
-            where: { categoryId: { in: categoryIds } },
+            where: { userId: userResult.userId, categoryId: { in: categoryIds } },
             orderBy: [
               { categoryId: 'asc' },
               { minSpEarned: 'desc' },
