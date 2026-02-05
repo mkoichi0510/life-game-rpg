@@ -5,6 +5,7 @@ import { dayKeyParamSchema } from '@/lib/validations/result'
 import { formatInternalError, formatZodError } from '@/lib/validations/helpers'
 import { confirmDay } from '@/lib/domains'
 import { getTodayKey } from '@/lib/date'
+import { requireUser, isUserFailure } from '@/lib/api/requireUser'
 
 /**
  * GET /api/results/:dayKey
@@ -15,6 +16,11 @@ export async function GET(
   { params }: { params: Promise<{ dayKey?: string }> }
 ) {
   try {
+    const userResult = await requireUser()
+    if (isUserFailure(userResult)) {
+      return userResult.response
+    }
+
     const { dayKey } = await params
     const result = dayKeyParamSchema.safeParse({ dayKey: dayKey ?? '' })
 
@@ -30,14 +36,18 @@ export async function GET(
     // 過去日付の場合のみ遅延確定
     if (!disableAutoConfirm && validatedDayKey < todayKey) {
       try {
-        await confirmDay(validatedDayKey, { allowAlreadyConfirmed: true })
+        await confirmDay(userResult.userId, validatedDayKey, {
+          allowAlreadyConfirmed: true,
+        })
       } catch (error) {
         console.error(`Failed to auto-confirm day ${validatedDayKey}:`, error)
       }
     }
 
     const dailyResult = await prisma.dailyResult.findUnique({
-      where: { dayKey: validatedDayKey },
+      where: {
+        userId_dayKey: { userId: userResult.userId, dayKey: validatedDayKey },
+      },
       select: {
         dayKey: true,
         status: true,

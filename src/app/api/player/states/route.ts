@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { formatInternalError } from '@/lib/validations/helpers'
+import { requireUser, isUserFailure } from '@/lib/api/requireUser'
 
 /**
  * GET /api/player/states
@@ -8,7 +9,13 @@ import { formatInternalError } from '@/lib/validations/helpers'
  */
 export async function GET() {
   try {
+    const userResult = await requireUser()
+    if (isUserFailure(userResult)) {
+      return userResult.response
+    }
+
     const playerStates = await prisma.playerCategoryState.findMany({
+      where: { userId: userResult.userId },
       orderBy: [{ category: { order: 'asc' } }, { categoryId: 'asc' }],
       select: {
         id: true,

@@ -7,6 +7,7 @@ import {
 } from '@/lib/validations/helpers'
 import { getRecentDayKeys } from '@/lib/date'
 import { requireCategory, isCategoryFailure } from '@/lib/api/requireCategory'
+import { requireUser, isUserFailure } from '@/lib/api/requireUser'
 
 /**
  * GET /api/skills/seasonal-titles/current
@@ -16,6 +17,11 @@ import { requireCategory, isCategoryFailure } from '@/lib/api/requireCategory'
  */
 export async function GET(request: NextRequest) {
   try {
+    const userResult = await requireUser()
+    if (isUserFailure(userResult)) {
+      return userResult.response
+    }
+
     const { searchParams } = new URL(request.url)
     const categoryId = searchParams.get('categoryId') ?? ''
 
@@ -25,10 +31,14 @@ export async function GET(request: NextRequest) {
     }
 
     // カテゴリ存在確認（rankWindowDaysも取得）
-    const categoryResult = await requireCategory(result.data.categoryId, {
+    const categoryResult = await requireCategory(
+      userResult.userId,
+      result.data.categoryId,
+      {
       id: true,
       rankWindowDays: true,
-    })
+      }
+    )
     if (isCategoryFailure(categoryResult)) {
       return categoryResult.response
     }
@@ -41,6 +51,7 @@ export async function GET(request: NextRequest) {
     const [categoryResults, titles] = await Promise.all([
       prisma.dailyCategoryResult.findMany({
         where: {
+          userId: userResult.userId,
           categoryId: result.data.categoryId,
           dayKey: { in: recentDayKeys },
         },
@@ -48,7 +59,7 @@ export async function GET(request: NextRequest) {
       }),
       // 称号一覧を取得（minSpEarned降順で、最も高い称号から確認）
       prisma.seasonalTitle.findMany({
-        where: { categoryId: result.data.categoryId },
+        where: { userId: userResult.userId, categoryId: result.data.categoryId },
         orderBy: [{ minSpEarned: 'desc' }, { order: 'desc' }],
       }),
     ])

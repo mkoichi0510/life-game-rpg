@@ -56,7 +56,7 @@ describe('POST /api/results/:dayKey/confirm', () => {
 
     expect(response.status).toBe(200)
     expect(data.ok).toBe(true)
-    expect(confirmDay).toHaveBeenCalledWith('2026-01-24')
+    expect(confirmDay).toHaveBeenCalledWith('user-1', '2026-01-24')
   })
 
   it('should return 400 when already confirmed', async () => {

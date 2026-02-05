@@ -5,7 +5,7 @@ import { GET } from '../spend-logs/route'
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     category: {
-      findUnique: vi.fn(),
+      findFirst: vi.fn(),
     },
     spendLog: {
       findMany: vi.fn(),
@@ -43,7 +43,7 @@ describe('GET /api/player/spend-logs', () => {
   })
 
   it('should return 404 when category does not exist', async () => {
-    vi.mocked(prisma.category.findUnique).mockResolvedValue(null)
+    vi.mocked(prisma.category.findFirst).mockResolvedValue(null)
 
     const request = createGetRequest('missing')
     const response = await GET(request)
@@ -67,7 +67,7 @@ describe('GET /api/player/spend-logs', () => {
       },
     ]
 
-    vi.mocked(prisma.category.findUnique).mockResolvedValue({ id: 'cat-1' })
+    vi.mocked(prisma.category.findFirst).mockResolvedValue({ id: 'cat-1' })
     vi.mocked(prisma.spendLog.findMany).mockResolvedValue(mockLogs)
     vi.mocked(prisma.skillNode.findMany).mockResolvedValue([
       {
@@ -100,7 +100,7 @@ describe('GET /api/player/spend-logs', () => {
       createdAt: '2024-01-15T10:00:00.000Z',
     })
     expect(prisma.spendLog.findMany).toHaveBeenCalledWith({
-      where: { categoryId: 'cat-1' },
+      where: { userId: 'user-1', categoryId: 'cat-1' },
       orderBy: [{ at: 'desc' }, { id: 'desc' }],
       take: 21,
       select: {
@@ -162,7 +162,7 @@ describe('GET /api/player/spend-logs', () => {
       createdAt: new Date('2024-01-15T09:00:00.000Z'),
     }
 
-    vi.mocked(prisma.category.findUnique).mockResolvedValue({ id: 'cat-1' })
+    vi.mocked(prisma.category.findFirst).mockResolvedValue({ id: 'cat-1' })
     vi.mocked(prisma.spendLog.findMany).mockResolvedValue([firstLog, secondLog])
     vi.mocked(prisma.skillNode.findMany).mockResolvedValue([
       {
@@ -186,7 +186,7 @@ describe('GET /api/player/spend-logs', () => {
   })
 
   it('should return 500 on database error', async () => {
-    vi.mocked(prisma.category.findUnique).mockResolvedValue({ id: 'cat-1' })
+    vi.mocked(prisma.category.findFirst).mockResolvedValue({ id: 'cat-1' })
     vi.mocked(prisma.spendLog.findMany).mockRejectedValue(new Error('DB Error'))
 
     const request = createGetRequest('cat-1')
@@ -210,7 +210,7 @@ describe('GET /api/player/spend-logs', () => {
       createdAt: new Date('2024-01-15T08:00:00.000Z'),
     }
 
-    vi.mocked(prisma.category.findUnique).mockResolvedValue({ id: 'cat-1' })
+    vi.mocked(prisma.category.findFirst).mockResolvedValue({ id: 'cat-1' })
     vi.mocked(prisma.spendLog.findMany).mockResolvedValue([thirdLog])
     vi.mocked(prisma.skillNode.findMany).mockResolvedValue([
       {
@@ -241,6 +241,7 @@ describe('GET /api/player/spend-logs', () => {
     expect(prisma.spendLog.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
+          userId: 'user-1',
           categoryId: 'cat-1',
           OR: [
             { at: { lt: new Date('2024-01-15T10:00:00.000Z') } },

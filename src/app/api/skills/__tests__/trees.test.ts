@@ -6,11 +6,11 @@ import { NextRequest } from 'next/server'
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     category: {
-      findUnique: vi.fn(),
+      findFirst: vi.fn(),
     },
     skillTree: {
       findMany: vi.fn(),
-      findUnique: vi.fn(),
+      findFirst: vi.fn(),
     },
   },
 }))
@@ -37,7 +37,7 @@ describe('GET /api/skills/trees', () => {
   })
 
   it('should return NOT_FOUND when category does not exist', async () => {
-    vi.mocked(prisma.category.findUnique).mockResolvedValue(null)
+    vi.mocked(prisma.category.findFirst).mockResolvedValue(null)
 
     const request = createRequest('/api/skills/trees?categoryId=non-existent')
     const response = await GET(request)
@@ -71,7 +71,7 @@ describe('GET /api/skills/trees', () => {
       },
     ]
 
-    vi.mocked(prisma.category.findUnique).mockResolvedValue(mockCategory as any)
+    vi.mocked(prisma.category.findFirst).mockResolvedValue(mockCategory as any)
     vi.mocked(prisma.skillTree.findMany).mockResolvedValue(mockTrees)
 
     const request = createRequest('/api/skills/trees?categoryId=cat-1')
@@ -83,7 +83,7 @@ describe('GET /api/skills/trees', () => {
     expect(data.trees[0].name).toBe('筋トレ')
     expect(data.trees[1].name).toBe('ランニング')
     expect(prisma.skillTree.findMany).toHaveBeenCalledWith({
-      where: { categoryId: 'cat-1' },
+      where: { userId: 'user-1', categoryId: 'cat-1' },
       orderBy: [{ order: 'asc' }, { id: 'asc' }],
       select: {
         id: true,
@@ -100,7 +100,7 @@ describe('GET /api/skills/trees', () => {
   it('should return empty array when no trees exist', async () => {
     const mockCategory = { id: 'cat-1', name: '健康' }
 
-    vi.mocked(prisma.category.findUnique).mockResolvedValue(mockCategory as any)
+    vi.mocked(prisma.category.findFirst).mockResolvedValue(mockCategory as any)
     vi.mocked(prisma.skillTree.findMany).mockResolvedValue([])
 
     const request = createRequest('/api/skills/trees?categoryId=cat-1')
@@ -112,7 +112,7 @@ describe('GET /api/skills/trees', () => {
   })
 
   it('should return 500 on database error', async () => {
-    vi.mocked(prisma.category.findUnique).mockRejectedValue(
+    vi.mocked(prisma.category.findFirst).mockRejectedValue(
       new Error('DB Error')
     )
 
@@ -138,7 +138,7 @@ describe('GET /api/skills/trees', () => {
       },
     ]
 
-    vi.mocked(prisma.category.findUnique).mockResolvedValue(mockCategory as any)
+    vi.mocked(prisma.category.findFirst).mockResolvedValue(mockCategory as any)
     vi.mocked(prisma.skillTree.findMany).mockResolvedValue(mockTrees)
 
     const request = createRequest(
@@ -150,7 +150,7 @@ describe('GET /api/skills/trees', () => {
     expect(response.status).toBe(200)
     expect(data.trees).toHaveLength(1)
     expect(prisma.skillTree.findMany).toHaveBeenCalledWith({
-      where: { categoryId: 'cat-1', visible: true },
+      where: { userId: 'user-1', categoryId: 'cat-1', visible: true },
       orderBy: [{ order: 'asc' }, { id: 'asc' }],
       select: {
         id: true,
@@ -187,7 +187,7 @@ describe('GET /api/skills/trees', () => {
       },
     ]
 
-    vi.mocked(prisma.category.findUnique).mockResolvedValue(mockCategory as any)
+    vi.mocked(prisma.category.findFirst).mockResolvedValue(mockCategory as any)
     vi.mocked(prisma.skillTree.findMany).mockResolvedValue(mockTrees)
 
     const request = createRequest('/api/skills/trees?categoryId=cat-1')
@@ -197,7 +197,7 @@ describe('GET /api/skills/trees', () => {
     expect(response.status).toBe(200)
     expect(data.trees).toHaveLength(2)
     expect(prisma.skillTree.findMany).toHaveBeenCalledWith({
-      where: { categoryId: 'cat-1' },
+      where: { userId: 'user-1', categoryId: 'cat-1' },
       orderBy: [{ order: 'asc' }, { id: 'asc' }],
       select: {
         id: true,
@@ -242,7 +242,7 @@ describe('GET /api/skills/trees/:id', () => {
   })
 
   it('should return NOT_FOUND when tree does not exist', async () => {
-    vi.mocked(prisma.skillTree.findUnique).mockResolvedValue(null)
+    vi.mocked(prisma.skillTree.findFirst).mockResolvedValue(null)
 
     const request = createRequest('/api/skills/trees/non-existent')
     const response = await GET_DETAIL(request, {
@@ -290,7 +290,7 @@ describe('GET /api/skills/trees/:id', () => {
       ],
     }
 
-    vi.mocked(prisma.skillTree.findUnique).mockResolvedValue(mockTree as any)
+    vi.mocked(prisma.skillTree.findFirst).mockResolvedValue(mockTree as any)
 
     const request = createRequest('/api/skills/trees/tree-1')
     const response = await GET_DETAIL(request, {
@@ -313,7 +313,7 @@ describe('GET /api/skills/trees/:id', () => {
   })
 
   it('should return 500 on database error', async () => {
-    vi.mocked(prisma.skillTree.findUnique).mockRejectedValue(
+    vi.mocked(prisma.skillTree.findFirst).mockRejectedValue(
       new Error('DB Error')
     )
 

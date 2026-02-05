@@ -5,6 +5,7 @@ import {
   formatInternalError,
   formatZodError,
 } from '@/lib/validations/helpers'
+import { requireUser, isUserFailure } from '@/lib/api/requireUser'
 
 /**
  * GET /api/categories
@@ -14,11 +15,19 @@ import {
  */
 export async function GET(request: NextRequest) {
   try {
+    const userResult = await requireUser()
+    if (isUserFailure(userResult)) {
+      return userResult.response
+    }
+
     const { searchParams } = new URL(request.url)
     const visibleOnly = searchParams.get('visible') === 'true'
 
     const categories = await prisma.category.findMany({
-      where: visibleOnly ? { visible: true } : undefined,
+      where: {
+        userId: userResult.userId,
+        ...(visibleOnly ? { visible: true } : {}),
+      },
       orderBy: { id: 'asc' },
     })
 
@@ -35,6 +44,11 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const userResult = await requireUser()
+    if (isUserFailure(userResult)) {
+      return userResult.response
+    }
+
     const body = await request.json()
     const result = createCategorySchema.safeParse(body)
 
@@ -44,6 +58,7 @@ export async function POST(request: NextRequest) {
 
     const category = await prisma.category.create({
       data: {
+        userId: userResult.userId,
         name: result.data.name,
         visible: result.data.visible,
         order: result.data.order,

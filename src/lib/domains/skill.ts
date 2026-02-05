@@ -19,13 +19,16 @@ type UnlockNodeResult = {
   treeId: string
 }
 
-export async function unlockNode(nodeId: string): Promise<UnlockNodeResult> {
+export async function unlockNode(
+  userId: string,
+  nodeId: string
+): Promise<UnlockNodeResult> {
   return prisma.$transaction(async (tx) => {
-    const node = await tx.skillNode.findUnique({
-      where: { id: nodeId },
+    const node = await tx.skillNode.findFirst({
+      where: { id: nodeId, userId },
       include: {
         tree: { include: { category: { include: { playerState: true } } } },
-        unlockedNodes: true,
+        unlockedNodes: { where: { userId } },
       },
     })
 
@@ -49,12 +52,13 @@ export async function unlockNode(nodeId: string): Promise<UnlockNodeResult> {
     if (node.order > 1) {
       const prevNode = await tx.skillNode.findUnique({
         where: {
-          treeId_order: {
+          userId_treeId_order: {
+            userId,
             treeId: node.treeId,
             order: node.order - 1,
           },
         },
-        include: { unlockedNodes: true },
+        include: { unlockedNodes: { where: { userId } } },
       })
 
       if (!prevNode || prevNode.unlockedNodes.length === 0) {
@@ -68,11 +72,12 @@ export async function unlockNode(nodeId: string): Promise<UnlockNodeResult> {
     })
 
     const unlockedNode = await tx.unlockedNode.create({
-      data: { nodeId },
+      data: { userId, nodeId },
     })
 
     await tx.spendLog.create({
       data: {
+        userId,
         categoryId: node.tree.categoryId,
         type: SPEND_LOG_TYPE.UNLOCK_NODE,
         costSp: node.costSp,

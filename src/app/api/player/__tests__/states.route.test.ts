@@ -46,6 +46,7 @@ describe('GET /api/player/states', () => {
     expect(response.status).toBe(200)
     expect(data.playerStates).toHaveLength(2)
     expect(prisma.playerCategoryState.findMany).toHaveBeenCalledWith({
+      where: { userId: 'user-1' },
       orderBy: [{ category: { order: 'asc' } }, { categoryId: 'asc' }],
       select: {
         id: true,

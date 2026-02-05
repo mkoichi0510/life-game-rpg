@@ -59,7 +59,7 @@ describe('POST /api/skills/nodes/:id/unlock', () => {
 
     expect(response.status).toBe(200)
     expect(data.unlockedNode.nodeId).toBe('node-1')
-    expect(vi.mocked(unlockNode)).toHaveBeenCalledWith('node-1')
+    expect(vi.mocked(unlockNode)).toHaveBeenCalledWith('user-1', 'node-1')
   })
 
   it('should return NOT_FOUND when node does not exist', async () => {

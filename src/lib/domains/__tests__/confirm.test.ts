@@ -22,21 +22,27 @@ vi.mock('@/lib/date', () => ({
 import { prisma } from '@/lib/prisma'
 import { confirmDay, autoConfirmRecentDays } from '../confirm'
 
+const userId = 'user-1'
+
 describe('confirmDay', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('should throw FutureDateError for future date', async () => {
-    await expect(confirmDay('2030-01-01')).rejects.toThrow(FutureDateError)
-    await expect(confirmDay('2030-01-01')).rejects.toMatchObject({
+    await expect(confirmDay(userId, '2030-01-01')).rejects.toThrow(
+      FutureDateError
+    )
+    await expect(confirmDay(userId, '2030-01-01')).rejects.toMatchObject({
       code: 'FUTURE_DATE',
       message: 'Cannot confirm future date: 2030-01-01',
     })
   })
 
   it('should throw FutureDateError for tomorrow', async () => {
-    await expect(confirmDay('2026-01-25')).rejects.toThrow(FutureDateError)
+    await expect(confirmDay(userId, '2026-01-25')).rejects.toThrow(
+      FutureDateError
+    )
   })
 
   it('should allow today', async () => {
@@ -57,7 +63,7 @@ describe('confirmDay', () => {
       return callback(tx as unknown as Parameters<typeof callback>[0])
     })
 
-    await expect(confirmDay('2026-01-24')).resolves.toBeDefined()
+    await expect(confirmDay(userId, '2026-01-24')).resolves.toBeDefined()
   })
 
   it('should allow past date', async () => {
@@ -78,7 +84,7 @@ describe('confirmDay', () => {
       return callback(tx as unknown as Parameters<typeof callback>[0])
     })
 
-    await expect(confirmDay('2026-01-23')).resolves.toBeDefined()
+    await expect(confirmDay(userId, '2026-01-23')).resolves.toBeDefined()
   })
 
   it('should throw AlreadyConfirmedError when already confirmed', async () => {
@@ -95,8 +101,10 @@ describe('confirmDay', () => {
       return callback(tx as unknown as Parameters<typeof callback>[0])
     })
 
-    await expect(confirmDay('2026-01-23')).rejects.toThrow(AlreadyConfirmedError)
-    await expect(confirmDay('2026-01-23')).rejects.toMatchObject({
+    await expect(confirmDay(userId, '2026-01-23')).rejects.toThrow(
+      AlreadyConfirmedError
+    )
+    await expect(confirmDay(userId, '2026-01-23')).rejects.toMatchObject({
       code: 'ALREADY_CONFIRMED',
     })
   })
@@ -117,7 +125,9 @@ describe('confirmDay', () => {
       return callback(tx as unknown as Parameters<typeof callback>[0])
     })
 
-    const result = await confirmDay('2026-01-23', { allowAlreadyConfirmed: true })
+    const result = await confirmDay(userId, '2026-01-23', {
+      allowAlreadyConfirmed: true,
+    })
     expect(result).toEqual(existingResult)
   })
 })
@@ -147,7 +157,7 @@ describe('autoConfirmRecentDays', () => {
       return callback(tx as unknown as Parameters<typeof callback>[0])
     })
 
-    await autoConfirmRecentDays(3)
+    await autoConfirmRecentDays(userId, 3)
 
     expect(confirmedDays).not.toContain('2026-01-24')
     expect(confirmedDays).toContain('2026-01-23')
@@ -182,7 +192,7 @@ describe('autoConfirmRecentDays', () => {
       return callback(tx as unknown as Parameters<typeof callback>[0])
     })
 
-    const autoConfirmPromise = autoConfirmRecentDays(3)
+    const autoConfirmPromise = autoConfirmRecentDays(userId, 3)
 
     // Wait for all to start
     await new Promise((resolve) => setTimeout(resolve, 10))

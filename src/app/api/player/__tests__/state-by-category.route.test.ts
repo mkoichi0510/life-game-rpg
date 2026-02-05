@@ -5,7 +5,7 @@ import { GET } from '../states/[categoryId]/route'
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     category: {
-      findUnique: vi.fn(),
+      findFirst: vi.fn(),
     },
   },
 }))
@@ -31,7 +31,7 @@ describe('GET /api/player/states/:categoryId', () => {
   })
 
   it('should return 404 when category does not exist', async () => {
-    vi.mocked(prisma.category.findUnique).mockResolvedValue(null)
+    vi.mocked(prisma.category.findFirst).mockResolvedValue(null)
 
     const request = createGetRequest('missing')
     const response = await GET(request, {
@@ -44,7 +44,7 @@ describe('GET /api/player/states/:categoryId', () => {
   })
 
   it('should return null playerState when no state exists', async () => {
-    vi.mocked(prisma.category.findUnique).mockResolvedValue({
+    vi.mocked(prisma.category.findFirst).mockResolvedValue({
       id: 'cat-1',
       name: '健康',
       order: 1,
@@ -63,7 +63,7 @@ describe('GET /api/player/states/:categoryId', () => {
   })
 
   it('should return playerState when it exists', async () => {
-    vi.mocked(prisma.category.findUnique).mockResolvedValue({
+    vi.mocked(prisma.category.findFirst).mockResolvedValue({
       id: 'cat-1',
       name: '健康',
       order: 1,
@@ -88,7 +88,7 @@ describe('GET /api/player/states/:categoryId', () => {
   })
 
   it('should return 500 on database error', async () => {
-    vi.mocked(prisma.category.findUnique).mockRejectedValue(
+    vi.mocked(prisma.category.findFirst).mockRejectedValue(
       new Error('DB Error')
     )
 

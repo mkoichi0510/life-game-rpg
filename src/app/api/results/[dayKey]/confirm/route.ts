@@ -10,6 +10,7 @@ import {
   AlreadyConfirmedError,
   FutureDateError,
 } from '@/lib/domains'
+import { requireUser, isUserFailure } from '@/lib/api/requireUser'
 
 /**
  * POST /api/results/:dayKey/confirm
@@ -20,6 +21,11 @@ export async function POST(
   { params }: { params: Promise<{ dayKey?: string }> }
 ) {
   try {
+    const userResult = await requireUser()
+    if (isUserFailure(userResult)) {
+      return userResult.response
+    }
+
     const { dayKey } = await params
     const result = dayKeyParamSchema.safeParse({ dayKey: dayKey ?? '' })
 
@@ -27,7 +33,7 @@ export async function POST(
       return formatZodError(result.error)
     }
 
-    await confirmDay(result.data.dayKey)
+    await confirmDay(userResult.userId, result.data.dayKey)
 
     return NextResponse.json({ ok: true })
   } catch (error) {

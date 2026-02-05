@@ -6,7 +6,7 @@ import { NextRequest } from 'next/server'
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     category: {
-      findUnique: vi.fn(),
+      findFirst: vi.fn(),
     },
     seasonalTitle: {
       findMany: vi.fn(),
@@ -44,7 +44,7 @@ describe('GET /api/skills/seasonal-titles', () => {
   })
 
   it('should return NOT_FOUND when category does not exist', async () => {
-    vi.mocked(prisma.category.findUnique).mockResolvedValue(null)
+    vi.mocked(prisma.category.findFirst).mockResolvedValue(null)
 
     const request = createRequest(
       '/api/skills/seasonal-titles?categoryId=non-existent'
@@ -89,7 +89,7 @@ describe('GET /api/skills/seasonal-titles', () => {
       },
     ]
 
-    vi.mocked(prisma.category.findUnique).mockResolvedValue(mockCategory as any)
+    vi.mocked(prisma.category.findFirst).mockResolvedValue(mockCategory as any)
     vi.mocked(prisma.seasonalTitle.findMany).mockResolvedValue(mockTitles)
 
     const request = createRequest(
@@ -104,7 +104,7 @@ describe('GET /api/skills/seasonal-titles', () => {
     expect(data.titles[1].label).toBe('シルバー')
     expect(data.titles[2].label).toBe('ゴールド')
     expect(prisma.seasonalTitle.findMany).toHaveBeenCalledWith({
-      where: { categoryId: 'cat-1' },
+      where: { userId: 'user-1', categoryId: 'cat-1' },
       orderBy: [{ order: 'asc' }, { id: 'asc' }],
       select: {
         id: true,
@@ -121,7 +121,7 @@ describe('GET /api/skills/seasonal-titles', () => {
   it('should return empty array when no titles exist', async () => {
     const mockCategory = { id: 'cat-1', name: '健康' }
 
-    vi.mocked(prisma.category.findUnique).mockResolvedValue(mockCategory as any)
+    vi.mocked(prisma.category.findFirst).mockResolvedValue(mockCategory as any)
     vi.mocked(prisma.seasonalTitle.findMany).mockResolvedValue([])
 
     const request = createRequest(
@@ -135,7 +135,7 @@ describe('GET /api/skills/seasonal-titles', () => {
   })
 
   it('should return 500 on database error', async () => {
-    vi.mocked(prisma.category.findUnique).mockRejectedValue(
+    vi.mocked(prisma.category.findFirst).mockRejectedValue(
       new Error('DB Error')
     )
 
@@ -166,7 +166,7 @@ describe('GET /api/skills/seasonal-titles/current', () => {
   })
 
   it('should return NOT_FOUND when category does not exist', async () => {
-    vi.mocked(prisma.category.findUnique).mockResolvedValue(null)
+    vi.mocked(prisma.category.findFirst).mockResolvedValue(null)
 
     const request = createRequest(
       '/api/skills/seasonal-titles/current?categoryId=non-existent'
@@ -219,7 +219,7 @@ describe('GET /api/skills/seasonal-titles/current', () => {
       { spEarned: 2 },
     ]
 
-    vi.mocked(prisma.category.findUnique).mockResolvedValue(mockCategory as any)
+    vi.mocked(prisma.category.findFirst).mockResolvedValue(mockCategory as any)
     vi.mocked(getRecentDayKeys).mockReturnValue([
       '2024-01-01',
       '2024-01-02',
@@ -257,7 +257,7 @@ describe('GET /api/skills/seasonal-titles/current', () => {
     ]
     const mockCategoryResults = [{ spEarned: 2 }]
 
-    vi.mocked(prisma.category.findUnique).mockResolvedValue(mockCategory as any)
+    vi.mocked(prisma.category.findFirst).mockResolvedValue(mockCategory as any)
     vi.mocked(getRecentDayKeys).mockReturnValue(['2024-01-01'])
     vi.mocked(prisma.dailyCategoryResult.findMany).mockResolvedValue(
       mockCategoryResults as any
@@ -287,7 +287,7 @@ describe('GET /api/skills/seasonal-titles/current', () => {
       },
     ]
 
-    vi.mocked(prisma.category.findUnique).mockResolvedValue(mockCategory as any)
+    vi.mocked(prisma.category.findFirst).mockResolvedValue(mockCategory as any)
     vi.mocked(getRecentDayKeys).mockReturnValue(['2024-01-01'])
     vi.mocked(prisma.dailyCategoryResult.findMany).mockResolvedValue([])
     vi.mocked(prisma.seasonalTitle.findMany).mockResolvedValue(mockTitles as any)
@@ -304,7 +304,7 @@ describe('GET /api/skills/seasonal-titles/current', () => {
   })
 
   it('should return 500 on database error', async () => {
-    vi.mocked(prisma.category.findUnique).mockRejectedValue(
+    vi.mocked(prisma.category.findFirst).mockRejectedValue(
       new Error('DB Error')
     )
 

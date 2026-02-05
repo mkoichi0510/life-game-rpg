@@ -6,6 +6,7 @@ import {
   formatInternalError,
 } from '@/lib/validations/helpers'
 import { requireCategory, isCategoryFailure } from '@/lib/api/requireCategory'
+import { requireUser, isUserFailure } from '@/lib/api/requireUser'
 
 /**
  * GET /api/actions
@@ -16,6 +17,11 @@ import { requireCategory, isCategoryFailure } from '@/lib/api/requireCategory'
  */
 export async function GET(request: NextRequest) {
   try {
+    const userResult = await requireUser()
+    if (isUserFailure(userResult)) {
+      return userResult.response
+    }
+
     const { searchParams } = new URL(request.url)
     const query = {
       categoryId: searchParams.get('categoryId') ?? '',
@@ -27,13 +33,17 @@ export async function GET(request: NextRequest) {
       return formatZodError(result.error)
     }
 
-    const categoryResult = await requireCategory(result.data.categoryId)
+    const categoryResult = await requireCategory(
+      userResult.userId,
+      result.data.categoryId
+    )
     if (isCategoryFailure(categoryResult)) {
       return categoryResult.response
     }
 
     const actions = await prisma.action.findMany({
       where: {
+        userId: userResult.userId,
         categoryId: result.data.categoryId,
         ...(result.data.visible ? { visible: true } : {}),
       },
@@ -53,6 +63,11 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const userResult = await requireUser()
+    if (isUserFailure(userResult)) {
+      return userResult.response
+    }
+
     const body = await request.json()
     const result = createActionSchema.safeParse(body)
 
@@ -60,13 +75,17 @@ export async function POST(request: NextRequest) {
       return formatZodError(result.error)
     }
 
-    const categoryResult = await requireCategory(result.data.categoryId)
+    const categoryResult = await requireCategory(
+      userResult.userId,
+      result.data.categoryId
+    )
     if (isCategoryFailure(categoryResult)) {
       return categoryResult.response
     }
 
     const action = await prisma.action.create({
       data: {
+        userId: userResult.userId,
         categoryId: result.data.categoryId,
         label: result.data.label,
         unit: result.data.unit,

@@ -8,7 +8,11 @@ type ConfirmOptions = {
   allowAlreadyConfirmed?: boolean
 }
 
-export async function confirmDay(dayKey: string, options?: ConfirmOptions) {
+export async function confirmDay(
+  userId: string,
+  dayKey: string,
+  options?: ConfirmOptions
+) {
   const todayKey = getTodayKey()
   if (dayKey > todayKey) {
     throw new FutureDateError(dayKey)
@@ -16,14 +20,24 @@ export async function confirmDay(dayKey: string, options?: ConfirmOptions) {
 
   return prisma.$transaction(async (tx) => {
     let dailyResult = await tx.dailyResult.findUnique({
-      where: { dayKey },
-      include: { categoryResults: { include: { category: true } } },
+      where: { userId_dayKey: { userId, dayKey } },
+      include: {
+        categoryResults: {
+          where: { userId },
+          include: { category: true },
+        },
+      },
     })
 
     if (!dailyResult) {
       dailyResult = await tx.dailyResult.create({
-        data: { dayKey },
-        include: { categoryResults: { include: { category: true } } },
+        data: { userId, dayKey },
+        include: {
+          categoryResults: {
+            where: { userId },
+            include: { category: true },
+          },
+        },
       })
     }
 
@@ -52,6 +66,7 @@ export async function confirmDay(dayKey: string, options?: ConfirmOptions) {
       await tx.playerCategoryState.upsert({
         where: { categoryId: categoryResult.categoryId },
         create: {
+          userId,
           categoryId: categoryResult.categoryId,
           xpTotal: xpEarned,
           spUnspent: spEarned,
@@ -64,7 +79,7 @@ export async function confirmDay(dayKey: string, options?: ConfirmOptions) {
     }
 
     return tx.dailyResult.update({
-      where: { dayKey },
+      where: { userId_dayKey: { userId, dayKey } },
       data: {
         status: DAILY_RESULT_STATUS.CONFIRMED,
         confirmedAt: new Date(),
@@ -73,7 +88,7 @@ export async function confirmDay(dayKey: string, options?: ConfirmOptions) {
   })
 }
 
-export async function autoConfirmRecentDays(days: number) {
+export async function autoConfirmRecentDays(userId: string, days: number) {
   const todayKey = getTodayKey()
   const recentDayKeys = getRecentDayKeys(days).filter(
     (dayKey) => dayKey !== todayKey
@@ -81,7 +96,7 @@ export async function autoConfirmRecentDays(days: number) {
 
   await Promise.all(
     recentDayKeys.map((dayKey) =>
-      confirmDay(dayKey, { allowAlreadyConfirmed: true })
+      confirmDay(userId, dayKey, { allowAlreadyConfirmed: true })
     )
   )
 }

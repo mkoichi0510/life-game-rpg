@@ -5,7 +5,7 @@ import { NextRequest } from 'next/server'
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     skillTree: {
-      findUnique: vi.fn(),
+      findFirst: vi.fn(),
     },
     skillNode: {
       findMany: vi.fn(),
@@ -35,7 +35,7 @@ describe('GET /api/skills/nodes', () => {
   })
 
   it('should return NOT_FOUND when tree does not exist', async () => {
-    vi.mocked(prisma.skillTree.findUnique).mockResolvedValue(null)
+    vi.mocked(prisma.skillTree.findFirst).mockResolvedValue(null)
 
     const request = createRequest('/api/skills/nodes?treeId=non-existent')
     const response = await GET(request)
@@ -81,7 +81,7 @@ describe('GET /api/skills/nodes', () => {
       },
     ]
 
-    vi.mocked(prisma.skillTree.findUnique).mockResolvedValue(mockTree as any)
+    vi.mocked(prisma.skillTree.findFirst).mockResolvedValue(mockTree as any)
     vi.mocked(prisma.skillNode.findMany).mockResolvedValue(mockNodes as any)
 
     const request = createRequest('/api/skills/nodes?treeId=tree-1')
@@ -108,10 +108,11 @@ describe('GET /api/skills/nodes', () => {
     expect(data.nodes[2].isUnlocked).toBe(false)
 
     expect(prisma.skillNode.findMany).toHaveBeenCalledWith({
-      where: { treeId: 'tree-1' },
+      where: { userId: 'user-1', treeId: 'tree-1' },
       orderBy: [{ order: 'asc' }, { id: 'asc' }],
       include: {
         unlockedNodes: {
+          where: { userId: 'user-1' },
           select: {
             id: true,
             unlockedAt: true,
@@ -124,7 +125,7 @@ describe('GET /api/skills/nodes', () => {
   it('should return empty array when no nodes exist', async () => {
     const mockTree = { id: 'tree-1', name: '筋トレ' }
 
-    vi.mocked(prisma.skillTree.findUnique).mockResolvedValue(mockTree as any)
+    vi.mocked(prisma.skillTree.findFirst).mockResolvedValue(mockTree as any)
     vi.mocked(prisma.skillNode.findMany).mockResolvedValue([])
 
     const request = createRequest('/api/skills/nodes?treeId=tree-1')
@@ -136,7 +137,7 @@ describe('GET /api/skills/nodes', () => {
   })
 
   it('should return 500 on database error', async () => {
-    vi.mocked(prisma.skillTree.findUnique).mockRejectedValue(
+    vi.mocked(prisma.skillTree.findFirst).mockRejectedValue(
       new Error('DB Error')
     )
 

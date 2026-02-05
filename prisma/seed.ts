@@ -5,12 +5,27 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('🌱 Starting seed...')
 
+  const defaultUserEmail = process.env.DEFAULT_USER_EMAIL
+  if (!defaultUserEmail) {
+    throw new Error('DEFAULT_USER_EMAIL is required for seeding')
+  }
+
+  const user = await prisma.user.upsert({
+    where: { email: defaultUserEmail },
+    update: {},
+    create: {
+      email: defaultUserEmail,
+      name: 'Default User',
+    },
+  })
+
   // カテゴリの作成
   const healthCategory = await prisma.category.upsert({
     where: { id: 'health-category' },
     update: {},
     create: {
       id: 'health-category',
+      userId: user.id,
       name: '健康',
       visible: true,
       order: 1,
@@ -25,6 +40,7 @@ async function main() {
     update: {},
     create: {
       id: 'certification-category',
+      userId: user.id,
       name: '資格・学習',
       visible: true,
       order: 2,
@@ -49,6 +65,7 @@ async function main() {
       update: {},
       create: {
         id: `health-${action.order}`,
+        userId: user.id,
         categoryId: healthCategory.id,
         label: action.label,
         unit: action.unit,
@@ -73,6 +90,7 @@ async function main() {
       update: {},
       create: {
         id: `cert-${action.order}`,
+        userId: user.id,
         categoryId: certificationCategory.id,
         label: action.label,
         visible: true,
@@ -87,6 +105,7 @@ async function main() {
     update: {},
     create: {
       id: 'health-skill-tree',
+      userId: user.id,
       categoryId: healthCategory.id,
       name: '健康マスター',
       visible: true,
@@ -109,6 +128,7 @@ async function main() {
       update: {},
       create: {
         id: `health-node-${node.order}`,
+        userId: user.id,
         treeId: healthSkillTree.id,
         title: node.title,
         costSp: node.costSp,
@@ -123,6 +143,7 @@ async function main() {
     update: {},
     create: {
       id: 'cert-skill-tree',
+      userId: user.id,
       categoryId: certificationCategory.id,
       name: '知識の探求者',
       visible: true,
@@ -145,6 +166,7 @@ async function main() {
       update: {},
       create: {
         id: `cert-node-${node.order}`,
+        userId: user.id,
         treeId: certSkillTree.id,
         title: node.title,
         costSp: node.costSp,
@@ -168,6 +190,7 @@ async function main() {
       update: {},
       create: {
         id: `health-seasonal-${title.order}`,
+        userId: user.id,
         categoryId: healthCategory.id,
         label: title.label,
         minSpEarned: title.minSpEarned,
@@ -181,6 +204,7 @@ async function main() {
     where: { categoryId: healthCategory.id },
     update: {},
     create: {
+      userId: user.id,
       categoryId: healthCategory.id,
       xpTotal: 0,
       spUnspent: 0,
@@ -191,6 +215,7 @@ async function main() {
     where: { categoryId: certificationCategory.id },
     update: {},
     create: {
+      userId: user.id,
       categoryId: certificationCategory.id,
       xpTotal: 0,
       spUnspent: 0,

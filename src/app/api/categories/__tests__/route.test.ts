@@ -60,7 +60,7 @@ describe('GET /api/categories', () => {
     expect(data.categories[0].id).toBe('cat-1')
     expect(data.categories[1].id).toBe('cat-2')
     expect(prisma.category.findMany).toHaveBeenCalledWith({
-      where: undefined,
+      where: { userId: 'user-1' },
       orderBy: { id: 'asc' },
     })
   })
@@ -100,7 +100,7 @@ describe('GET /api/categories', () => {
     expect(response.status).toBe(200)
     expect(data.categories).toHaveLength(1)
     expect(prisma.category.findMany).toHaveBeenCalledWith({
-      where: { visible: true },
+      where: { userId: 'user-1', visible: true },
       orderBy: { id: 'asc' },
     })
   })
@@ -140,7 +140,7 @@ describe('GET /api/categories', () => {
     expect(response.status).toBe(200)
     expect(data.categories).toHaveLength(2)
     expect(prisma.category.findMany).toHaveBeenCalledWith({
-      where: undefined,
+      where: { userId: 'user-1' },
       orderBy: { id: 'asc' },
     })
   })
@@ -222,6 +222,7 @@ describe('POST /api/categories', () => {
     expect(response.status).toBe(201)
     expect(prisma.category.create).toHaveBeenCalledWith({
       data: {
+        userId: 'user-1',
         name: 'カスタムカテゴリ',
         visible: false,
         order: 5,
