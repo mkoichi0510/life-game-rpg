@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { GET } from '../states/route'
+import { auth } from '@/auth'
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
@@ -14,6 +15,14 @@ import { prisma } from '@/lib/prisma'
 describe('GET /api/player/states', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  it('should return 401 when not authenticated', async () => {
+    vi.mocked(auth).mockResolvedValueOnce(null)
+    const response = await GET()
+    expect(response.status).toBe(401)
+    const data = await response.json()
+    expect(data.error.code).toBe('UNAUTHORIZED')
   })
 
   it('should return player states ordered by category order then id', async () => {

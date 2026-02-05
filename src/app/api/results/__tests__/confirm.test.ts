@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 import { POST } from '../[dayKey]/confirm/route'
 import { AlreadyConfirmedError, FutureDateError } from '@/lib/domains'
+import { auth } from '@/auth'
 
 vi.mock('@/lib/domains', () => ({
   confirmDay: vi.fn(),
@@ -29,6 +30,17 @@ const createPostRequest = (dayKey: string) =>
 describe('POST /api/results/:dayKey/confirm', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  it('should return 401 when not authenticated', async () => {
+    vi.mocked(auth).mockResolvedValueOnce(null)
+    const request = createPostRequest('2026-01-24')
+    const response = await POST(request, {
+      params: Promise.resolve({ dayKey: '2026-01-24' }),
+    })
+    expect(response.status).toBe(401)
+    const data = await response.json()
+    expect(data.error.code).toBe('UNAUTHORIZED')
   })
 
   it('should return 400 when dayKey is missing', async () => {

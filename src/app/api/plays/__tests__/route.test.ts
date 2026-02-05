@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 import { GET, POST } from '../route'
 import { DELETE } from '../[id]/route'
+import { auth } from '@/auth'
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
@@ -44,6 +45,15 @@ const createPostRequest = (body: object): NextRequest => {
 describe('GET /api/plays', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  it('should return 401 when not authenticated', async () => {
+    vi.mocked(auth).mockResolvedValueOnce(null)
+    const request = createGetRequest('http://localhost:3000/api/plays?dayKey=2026-01-24')
+    const response = await GET(request)
+    expect(response.status).toBe(401)
+    const data = await response.json()
+    expect(data.error.code).toBe('UNAUTHORIZED')
   })
 
   it('should return 400 when dayKey is missing', async () => {
@@ -136,6 +146,15 @@ describe('GET /api/plays', () => {
 describe('POST /api/plays', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  it('should return 401 when not authenticated', async () => {
+    vi.mocked(auth).mockResolvedValueOnce(null)
+    const request = createPostRequest({ actionId: 'action-1' })
+    const response = await POST(request)
+    expect(response.status).toBe(401)
+    const data = await response.json()
+    expect(data.error.code).toBe('UNAUTHORIZED')
   })
 
   it('should return 400 when actionId is missing', async () => {

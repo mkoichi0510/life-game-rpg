@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 import { GET, POST } from '../route'
+import { auth } from '@/auth'
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
@@ -23,6 +24,15 @@ const createGetRequest = (url: string): NextRequest => {
 describe('GET /api/actions', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  it('should return 401 when not authenticated', async () => {
+    vi.mocked(auth).mockResolvedValueOnce(null)
+    const request = createGetRequest('http://localhost:3000/api/actions?categoryId=cat-1')
+    const response = await GET(request)
+    expect(response.status).toBe(401)
+    const data = await response.json()
+    expect(data.error.code).toBe('UNAUTHORIZED')
   })
 
   it('should return 400 when categoryId is missing', async () => {
@@ -185,6 +195,15 @@ describe('POST /api/actions', () => {
       headers: { 'Content-Type': 'application/json' },
     })
   }
+
+  it('should return 401 when not authenticated', async () => {
+    vi.mocked(auth).mockResolvedValueOnce(null)
+    const request = createRequest({ categoryId: 'cat-1', label: 'test' })
+    const response = await POST(request)
+    expect(response.status).toBe(401)
+    const data = await response.json()
+    expect(data.error.code).toBe('UNAUTHORIZED')
+  })
 
   it('should create an action with valid data', async () => {
     const mockAction = {

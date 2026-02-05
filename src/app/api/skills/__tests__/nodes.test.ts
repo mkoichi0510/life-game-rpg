@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { GET } from '../nodes/route'
 import { NextRequest } from 'next/server'
+import { auth } from '@/auth'
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
@@ -22,6 +23,15 @@ function createRequest(url: string): NextRequest {
 describe('GET /api/skills/nodes', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  it('should return 401 when not authenticated', async () => {
+    vi.mocked(auth).mockResolvedValueOnce(null)
+    const request = createRequest('/api/skills/nodes?treeId=tree-1')
+    const response = await GET(request)
+    expect(response.status).toBe(401)
+    const data = await response.json()
+    expect(data.error.code).toBe('UNAUTHORIZED')
   })
 
   it('should return VALIDATION_ERROR when treeId is missing', async () => {
