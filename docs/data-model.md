@@ -25,6 +25,9 @@ erDiagram
     SkillTree ||--o{ SkillNode : "has"
 
     SkillNode ||--o| UnlockedNode : "unlocked as"
+
+    User ||--o{ Account : "has"
+    User ||--o{ Session : "has"
 ```
 
 ---
@@ -49,6 +52,12 @@ erDiagram
 ### Player Domain（プレイヤー状態）
 - **PlayerCategoryState**: カテゴリ別の累計XP・未使用SP
 - **SpendLog**: SP消費履歴
+
+### Auth Domain（認証）
+- **User**: 認証ユーザー
+- **Account**: OAuthアカウント連携情報
+- **Session**: セッション管理
+- **VerificationToken**: メール検証等のトークン
 
 ---
 
