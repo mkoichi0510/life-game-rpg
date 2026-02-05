@@ -262,6 +262,25 @@ npm run db:push
 npm run db:migrate
 ```
 
+### 既存データベースにuserIdを追加する場合
+
+既存のデータベース（Phase 1時代のデータ）にuserIdカラムを追加する場合は、
+以下の手順でマイグレーションを行ってください：
+
+```bash
+# 1. 最初のマイグレーションを適用（userIdをNULLableで追加）
+pnpm prisma migrate deploy
+
+# 2. 既存データにデフォルトユーザーを紐付け
+pnpm tsx prisma/scripts/attach-default-user.ts
+
+# 3. 2つ目のマイグレーションを適用（NOT NULL制約を追加）
+pnpm prisma migrate deploy
+```
+
+**注意**: バックフィルスクリプト実行前にNOT NULL制約を適用すると、
+既存レコードが制約違反でエラーになります。必ず上記の順序で実行してください。
+
 ## 次のステップ
 
 セットアップが完了したら、以下を実装していきます：

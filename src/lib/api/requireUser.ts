@@ -23,10 +23,13 @@ export async function requireUser(): Promise<RequireUserResult> {
   if (process.env.E2E_AUTH_BYPASS === '1') {
     const email = process.env.DEFAULT_USER_EMAIL
     if (email) {
-      const user = await prisma.user.findUnique({ where: { email } })
-      if (user) {
-        return { ok: true as const, userId: user.id }
-      }
+      // findUnique → upsert に変更（ユーザーがなければ作成）
+      const user = await prisma.user.upsert({
+        where: { email },
+        update: {},
+        create: { email, name: 'E2E User' },
+      })
+      return { ok: true as const, userId: user.id }
     }
   }
 
