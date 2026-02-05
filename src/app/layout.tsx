@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import { auth } from "@/auth";
 import { Toaster } from "@/components/ui/sonner";
-import { BottomNav } from "@/components/layout/bottom-nav";
-import { Header } from "@/components/layout/header";
-import { PageContainer } from "@/components/layout/page-container";
+import { AppShell } from "@/components/layout/app-shell";
+import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -10,20 +10,20 @@ export const metadata: Metadata = {
   description: "人生を攻略するゲーム体験",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+
   return (
     <html lang="ja">
       <body className="antialiased">
-        <div className="min-h-screen bg-background">
-          <Header />
-          <BottomNav />
-          <PageContainer>{children}</PageContainer>
-        </div>
-        <Toaster position="top-center" richColors />
+        <Providers session={session}>
+          <AppShell>{children}</AppShell>
+          <Toaster position="top-center" richColors />
+        </Providers>
       </body>
     </html>
   );

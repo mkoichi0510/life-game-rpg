@@ -10,6 +10,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: {
     strategy: "database",
   },
+  pages: {
+    signIn: "/login",
+  },
   callbacks: {
     session({ session, user }) {
       if (session.user) {
