@@ -16,10 +16,16 @@ test.describe("アクション管理", () => {
   test("カテゴリ選択でアクション一覧が表示される", async ({ page }) => {
     await goSettingsActions(page);
 
-    await expect(page.getByText("筋トレ（上半身）")).toBeVisible();
+    // アクションがロードされるのを待つ
+    await expect(page.getByTestId("action-item").first()).toBeVisible();
 
-    await page.getByLabel("カテゴリ").selectOption({ label: "資格・学習" });
+    // 最初のカテゴリ（資格・学習）のアクションが表示される
+    // ※カテゴリはID昇順でソートされるため、certification-category が先に来る
     await expect(page.getByText("教材・参考書学習")).toBeVisible();
+
+    // カテゴリを切り替えると、そのカテゴリのアクションが表示される
+    await page.getByLabel("カテゴリ").selectOption({ label: "健康" });
+    await expect(page.getByText("筋トレ（上半身）")).toBeVisible();
   });
 
   test("アクションを追加できる", async ({ page }) => {
