@@ -1,6 +1,7 @@
 import { auth } from '@/auth'
 import { NextResponse } from 'next/server'
 import { formatUnauthorizedError } from '@/lib/validations/helpers'
+import { prisma } from '@/lib/prisma'
 
 type UserSuccess = { readonly ok: true; readonly userId: string }
 type UserFailure = { readonly ok: false; readonly response: NextResponse }
@@ -19,6 +20,16 @@ export function isUserFailure(
 }
 
 export async function requireUser(): Promise<RequireUserResult> {
+  if (process.env.E2E_AUTH_BYPASS === '1') {
+    const email = process.env.DEFAULT_USER_EMAIL
+    if (email) {
+      const user = await prisma.user.findUnique({ where: { email } })
+      if (user) {
+        return { ok: true as const, userId: user.id }
+      }
+    }
+  }
+
   const session = await auth()
   const userId = session?.user?.id
 

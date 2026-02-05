@@ -188,6 +188,8 @@ cp .env.e2e.example .env.e2e
 ```
 
 `.env.e2e`の`DATABASE_URL`をE2E用のDBに向けてください。
+E2Eでは認証をバイパスするため、`.env.e2e`に`E2E_AUTH_BYPASS="1"`と
+`DEFAULT_USER_EMAIL`が設定されていることを確認してください。
 
 ### Playwrightブラウザのインストール
 

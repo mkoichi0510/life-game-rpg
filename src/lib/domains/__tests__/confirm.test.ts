@@ -144,9 +144,9 @@ describe('autoConfirmRecentDays', () => {
       const tx = {
         dailyResult: {
           findUnique: vi.fn().mockImplementation(({ where }) => {
-            confirmedDays.push(where.dayKey)
+            confirmedDays.push(where.userId_dayKey.dayKey)
             return Promise.resolve({
-              dayKey: where.dayKey,
+              dayKey: where.userId_dayKey.dayKey,
               status: 'draft',
               categoryResults: [],
             })
@@ -175,13 +175,13 @@ describe('autoConfirmRecentDays', () => {
       const tx = {
         dailyResult: {
           findUnique: vi.fn().mockImplementation(async ({ where }) => {
-            callOrder.push(`start:${where.dayKey}`)
-            if (where.dayKey === '2026-01-23') {
+            callOrder.push(`start:${where.userId_dayKey.dayKey}`)
+            if (where.userId_dayKey.dayKey === '2026-01-23') {
               await firstPromise
             }
-            callOrder.push(`end:${where.dayKey}`)
+            callOrder.push(`end:${where.userId_dayKey.dayKey}`)
             return {
-              dayKey: where.dayKey,
+              dayKey: where.userId_dayKey.dayKey,
               status: 'draft',
               categoryResults: [],
             }
