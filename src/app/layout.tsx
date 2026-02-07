@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { Toaster } from "@/components/ui/sonner";
-import { AppShell } from "@/components/layout/app-shell";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -21,7 +20,7 @@ export default async function RootLayout({
     <html lang="ja">
       <body className="antialiased">
         <Providers session={session}>
-          <AppShell>{children}</AppShell>
+          {children}
           <Toaster position="top-center" richColors />
         </Providers>
       </body>
