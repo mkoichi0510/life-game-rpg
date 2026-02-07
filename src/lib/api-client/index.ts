@@ -92,8 +92,7 @@ export type HighlightsResponse = {
   weekSummary: HighlightWeekSummary;
 };
 
-async function getBaseUrl(): Promise<string> {
-  const headerStore = await headers();
+function getBaseUrlFromHeaders(headerStore: Headers): string {
   const host =
     headerStore.get("x-forwarded-host") ?? headerStore.get("host");
   const protocol = headerStore.get("x-forwarded-proto") ?? "http";
@@ -110,9 +109,12 @@ async function getBaseUrl(): Promise<string> {
 }
 
 async function requestJson<T>(path: string): Promise<T> {
-  const baseUrl = await getBaseUrl();
+  const headerStore = await headers();
+  const baseUrl = getBaseUrlFromHeaders(headerStore);
   const url = `${baseUrl}${path}`;
-  return fetchJson<T>(url);
+
+  const cookie = headerStore.get("cookie");
+  return fetchJson<T>(url, cookie ? { headers: { cookie } } : undefined);
 }
 
 export function fetchCategories(visibleOnly = true) {
