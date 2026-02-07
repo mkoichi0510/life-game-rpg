@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { formatInTimeZone } from "date-fns-tz";
 import { ja } from "date-fns/locale";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { DEFAULT_TIMEZONE } from "@/lib/date";
+import { ROUTES } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 
 function formatToday(): string {
@@ -20,12 +20,7 @@ function formatToday(): string {
 
 export function Header() {
   const [today, setToday] = useState("");
-  const pathname = usePathname();
   const { data: session } = useSession();
-
-  if (pathname === "/login") {
-    return null;
-  }
 
   useEffect(() => {
     // Set initial date after hydration
@@ -55,14 +50,14 @@ export function Header() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => signOut({ callbackUrl: "/login" })}
+                onClick={() => signOut({ callbackUrl: ROUTES.LOGIN })}
               >
                 ログアウト
               </Button>
             </>
           ) : (
             <Button size="sm" variant="outline" asChild>
-              <Link href="/login">ログイン</Link>
+              <Link href={ROUTES.LOGIN}>ログイン</Link>
             </Button>
           )}
         </div>

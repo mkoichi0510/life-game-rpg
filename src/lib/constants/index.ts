@@ -93,3 +93,11 @@ export const SKILL_STEP = {
 } as const;
 
 export type SkillStep = (typeof SKILL_STEP)[keyof typeof SKILL_STEP];
+
+/**
+ * アプリケーションルート定数
+ */
+export const ROUTES = {
+  LOGIN: "/login",
+  HOME: "/",
+} as const;
