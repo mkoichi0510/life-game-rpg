@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { formatInternalError } from '@/lib/validations/helpers'
-import { getTodayKey, getPreviousDayKey } from '@/lib/date'
+import { getTodayKey, getPreviousDayKey, getRecentDayKeys } from '@/lib/date'
 import { requireUser, isUserFailure } from '@/lib/api/requireUser'
 
 /**
@@ -17,11 +17,15 @@ export async function GET() {
       return userResult.response
     }
 
-    // プレイがある日付（dayKey）を降順で取得
+    // プレイがある日付（dayKey）を降順で取得（最大365日以内に絞る）
+    const MAX_STREAK_DAYS = 365
+    const recentDayKeys = getRecentDayKeys(MAX_STREAK_DAYS)
+
     const daysWithPlays = await prisma.dailyCategoryResult.findMany({
       where: {
         userId: userResult.userId,
         playCount: { gt: 0 },
+        dayKey: { in: recentDayKeys },
       },
       select: { dayKey: true },
       distinct: ['dayKey'],
@@ -29,10 +33,15 @@ export async function GET() {
     })
 
     const playedDayKeySet = new Set(daysWithPlays.map((d) => d.dayKey))
+    const todayKey = getTodayKey()
 
-    // 今日から遡って連続日数を数える
+    // 今日記録済みなら今日から、未記録なら昨日から遡る（grace period）
+    const startDay = playedDayKeySet.has(todayKey)
+      ? todayKey
+      : getPreviousDayKey(todayKey)
+
     let streak = 0
-    let currentDay = getTodayKey()
+    let currentDay = startDay
 
     while (playedDayKeySet.has(currentDay)) {
       streak++
