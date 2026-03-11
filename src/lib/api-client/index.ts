@@ -152,3 +152,7 @@ export function fetchSeasonalTitles(categoryId: string) {
 export function fetchHighlights() {
   return requestJson<HighlightsResponse>("/api/highlights");
 }
+
+export function fetchStreak() {
+  return requestJson<{ streak: number }>("/api/streak");
+}

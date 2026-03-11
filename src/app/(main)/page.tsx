@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { formatInTimeZone } from "date-fns-tz";
 import { ja } from "date-fns/locale";
-import { Zap, Sparkles, TrendingUp } from "lucide-react";
+import { Flame, Zap, Sparkles, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,6 +22,7 @@ import {
   fetchDailyResult,
   fetchHighlights,
   fetchSeasonalTitles,
+  fetchStreak,
 } from "@/lib/api-client";
 
 export const dynamic = "force-dynamic";
@@ -34,10 +35,11 @@ function formatTodayLabel(date = new Date()): string {
 
 export default async function Home() {
   const todayKey = getTodayKey();
-  const [categoriesResponse, dailyResultResponse, highlights] = await Promise.all([
+  const [categoriesResponse, dailyResultResponse, highlights, streakData] = await Promise.all([
     fetchCategories(true),
     fetchDailyResult(todayKey),
     fetchHighlights(),
+    fetchStreak(),
   ]);
 
   const categories = categoriesResponse.categories
@@ -77,6 +79,7 @@ export default async function Home() {
   const isConfirmed = dailyResult.status === DAILY_RESULT_STATUS.CONFIRMED;
   const xpSummaryLabel = isConfirmed ? "今日の獲得XP" : "未確定XP合計";
   const xpSummaryValue = totalXpEarned;
+  const streak = streakData.streak;
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
@@ -104,6 +107,54 @@ export default async function Home() {
             </Badge>
           </div>
 
+          {/* ストリークバナー */}
+          <div className={cn(
+            "mt-4 flex items-center gap-3 rounded-lg px-4 py-3",
+            streak > 0
+              ? "border border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50 dark:border-orange-800/50 dark:from-orange-950/40 dark:to-amber-950/40"
+              : "border border-muted bg-muted/30"
+          )}>
+            <Flame className={cn(
+              "h-6 w-6 shrink-0",
+              streak > 0 ? "text-orange-500" : "text-muted-foreground"
+            )} />
+            {streak > 0 ? (
+              <div>
+                <p className="text-base font-bold text-orange-700 dark:text-orange-300">
+                  {streak}日連続記録中！
+                </p>
+                <p className="text-xs text-orange-600/70 dark:text-orange-400/70">
+                  この調子で続けよう
+                </p>
+              </div>
+            ) : (
+              <div>
+                <p className="text-base font-bold text-foreground">
+                  今日が最初の一歩！
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  プレイを記録してストリークを始めよう
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* メインCTA */}
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Button asChild size="lg" className="shadow-sm">
+              <Link href="/play" data-testid="home-play">
+                プレイを記録する
+              </Link>
+            </Button>
+            {!isConfirmed && totalPlays > 0 && (
+              <Button variant="confirm" asChild size="lg" className="shadow-sm">
+                <Link href="/result" data-testid="home-confirm">
+                  今日を確定する
+                </Link>
+              </Button>
+            )}
+          </div>
+
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {/* プレイ数カード */}
             <div className="group rounded-lg border bg-card/80 p-4 backdrop-blur-sm transition-all hover:shadow-md">
@@ -112,9 +163,12 @@ export default async function Home() {
                 <span>今日のプレイ</span>
               </div>
               <p className="mt-2 text-3xl font-bold tracking-tight">
-                {totalPlays}
+                {totalPlays > 0 ? totalPlays : <span className="text-muted-foreground">0</span>}
                 <span className="ml-1 text-lg font-medium text-muted-foreground">回</span>
               </p>
+              {totalPlays === 0 && (
+                <p className="mt-1 text-xs text-muted-foreground">さあ、記録しよう！</p>
+              )}
             </div>
             {/* XPカード */}
             <div className="group rounded-lg border bg-xp-glow p-4 backdrop-blur-sm transition-all hover:shadow-md">
@@ -126,23 +180,14 @@ export default async function Home() {
                 <span className="text-xp-gradient">+{xpSummaryValue}</span>
                 <span className="ml-1 text-lg font-medium text-amber-600 dark:text-amber-400">XP</span>
               </p>
+              {xpSummaryValue === 0 && (
+                <p className="mt-1 text-xs text-muted-foreground">XPを積み上げよう！</p>
+              )}
             </div>
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Button asChild size="lg" className="shadow-sm">
-              <Link href="/play" data-testid="home-play">
-                プレイを記録する
-              </Link>
-            </Button>
-            {!isConfirmed && (
-              <Button variant="confirm" asChild size="lg" className="shadow-sm">
-                <Link href="/result" data-testid="home-confirm">
-                  今日を確定する
-                </Link>
-              </Button>
-            )}
-            <Button variant="outline" asChild size="lg">
+          <div className="mt-4 flex justify-end">
+            <Button variant="outline" asChild size="sm">
               <Link href="/skills" data-testid="home-skills">
                 スキルツリーを見る
               </Link>
@@ -161,7 +206,7 @@ export default async function Home() {
           <div className="space-y-4">
             {categories.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                まだカテゴリが登録されていません。
+                カテゴリを登録して、最初の記録を始めよう！
               </p>
             ) : (
               categories.map((category) => {
@@ -235,7 +280,7 @@ export default async function Home() {
             {categories.length === 0 ? (
               <Card>
                 <CardContent className="py-6 text-sm text-muted-foreground">
-                  週ランクはカテゴリ登録後に表示されます。
+                  カテゴリを登録すると、週ランクが表示されます！
                 </CardContent>
               </Card>
             ) : (
