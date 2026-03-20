@@ -154,5 +154,5 @@ export function fetchHighlights() {
 }
 
 export function fetchStreak() {
-  return requestJson<{ streak: number }>("/api/streak");
+  return requestJson<{ streak: number; playedToday: boolean }>("/api/streak");
 }

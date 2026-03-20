@@ -48,7 +48,8 @@ export async function GET() {
       currentDay = getPreviousDayKey(currentDay)
     }
 
-    return NextResponse.json({ streak })
+    const playedToday = playedDayKeySet.has(todayKey)
+    return NextResponse.json({ streak, playedToday })
   } catch (error) {
     console.error('Failed to fetch streak:', error)
     return formatInternalError('ストリーク情報の取得に失敗しました')
