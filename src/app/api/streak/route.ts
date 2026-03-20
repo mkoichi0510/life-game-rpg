@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { formatInternalError } from '@/lib/validations/helpers'
 import { getTodayKey, getPreviousDayKey, getRecentDayKeys } from '@/lib/date'
 import { requireUser, isUserFailure } from '@/lib/api/requireUser'
+import { MAX_STREAK_DAYS } from '@/lib/constants'
 
 /**
  * GET /api/streak
@@ -17,15 +18,15 @@ export async function GET() {
       return userResult.response
     }
 
-    // プレイがある日付（dayKey）を降順で取得（最大365日以内に絞る）
-    const MAX_STREAK_DAYS = 365
-    const recentDayKeys = getRecentDayKeys(MAX_STREAK_DAYS)
+    // プレイがある日付（dayKey）を降順で取得（最大MAX_STREAK_DAYS日以内に絞る）
+    // IN句の代わりに範囲クエリを使いDBのインデックスを効率的に利用する
+    const earliestDayKey = getRecentDayKeys(MAX_STREAK_DAYS).at(-1)!
 
     const daysWithPlays = await prisma.dailyCategoryResult.findMany({
       where: {
         userId: userResult.userId,
         playCount: { gt: 0 },
-        dayKey: { in: recentDayKeys },
+        dayKey: { gte: earliestDayKey },
       },
       select: { dayKey: true },
       distinct: ['dayKey'],

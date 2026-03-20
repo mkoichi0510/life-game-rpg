@@ -153,6 +153,11 @@ export function fetchHighlights() {
   return requestJson<HighlightsResponse>("/api/highlights");
 }
 
+export type StreakResponse = {
+  streak: number;
+  playedToday: boolean;
+};
+
 export function fetchStreak() {
-  return requestJson<{ streak: number; playedToday: boolean }>("/api/streak");
+  return requestJson<StreakResponse>("/api/streak");
 }

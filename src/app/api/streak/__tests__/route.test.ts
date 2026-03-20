@@ -10,21 +10,12 @@ vi.mock('@/lib/prisma', () => ({
   },
 }))
 
+// getTodayKey のみモック。getRecentDayKeys・getPreviousDayKey は実装をそのまま使用
 vi.mock('@/lib/date', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/date')>()
   return {
     ...actual,
     getTodayKey: vi.fn(() => '2026-03-20'),
-    getPreviousDayKey: actual.getPreviousDayKey,
-    getRecentDayKeys: vi.fn(() => {
-      const keys: string[] = []
-      for (let i = 0; i < 365; i++) {
-        const d = new Date('2026-03-20')
-        d.setDate(d.getDate() - i)
-        keys.push(d.toISOString().slice(0, 10))
-      }
-      return keys
-    }),
   }
 })
 
@@ -43,7 +34,7 @@ describe('GET /api/streak', () => {
     expect(data.error.code).toBe('UNAUTHORIZED')
   })
 
-  it('should return streak and playedToday=true when played today', async () => {
+  it('should return streak=3 and playedToday=true when played today and 2 days before', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(prisma.dailyCategoryResult.findMany).mockResolvedValue([
       { dayKey: '2026-03-20' },
@@ -58,7 +49,7 @@ describe('GET /api/streak', () => {
     expect(data.playedToday).toBe(true)
   })
 
-  it('should return streak and playedToday=false when only played yesterday (grace period)', async () => {
+  it('should return streak=2 and playedToday=false when only played yesterday (grace period)', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(prisma.dailyCategoryResult.findMany).mockResolvedValue([
       { dayKey: '2026-03-19' },
@@ -81,5 +72,44 @@ describe('GET /api/streak', () => {
     const data = await response.json()
     expect(data.streak).toBe(0)
     expect(data.playedToday).toBe(false)
+  })
+
+  it('should return streak=0 when streak is broken (gap between yesterday and day before)', async () => {
+    // 今日未プレイ、昨日(03-19)も未プレイ、一昨日(03-18)のみあり → grace period起点の昨日から遡るが昨日もなし → streak=0
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.mocked(prisma.dailyCategoryResult.findMany).mockResolvedValue([
+      { dayKey: '2026-03-18' },
+    ] as any)
+
+    const response = await GET()
+    expect(response.status).toBe(200)
+    const data = await response.json()
+    expect(data.streak).toBe(0)
+    expect(data.playedToday).toBe(false)
+  })
+
+  it('should return streak=1 and playedToday=true when only played today', async () => {
+    // 今日プレイ済み・昨日未プレイ → streak=1
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.mocked(prisma.dailyCategoryResult.findMany).mockResolvedValue([
+      { dayKey: '2026-03-20' },
+    ] as any)
+
+    const response = await GET()
+    expect(response.status).toBe(200)
+    const data = await response.json()
+    expect(data.streak).toBe(1)
+    expect(data.playedToday).toBe(true)
+  })
+
+  it('should return 500 when database throws an error', async () => {
+    vi.mocked(prisma.dailyCategoryResult.findMany).mockRejectedValue(
+      new Error('DB connection error')
+    )
+
+    const response = await GET()
+    expect(response.status).toBe(500)
+    const data = await response.json()
+    expect(data.error).toBeDefined()
   })
 })
