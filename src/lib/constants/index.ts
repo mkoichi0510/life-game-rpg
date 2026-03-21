@@ -101,3 +101,8 @@ export const ROUTES = {
   LOGIN: "/login",
   HOME: "/",
 } as const;
+
+/**
+ * ストリーク計算の最大遡及日数
+ */
+export const MAX_STREAK_DAYS = 365;

@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { RankCard } from "@/components/home/rank-card";
 import { AchievementHighlights } from "@/components/home/achievement-highlights";
+import { StreakBanner } from "@/components/home/streak-banner";
 import { cn } from "@/lib/utils";
 import { CATEGORY_COLORS, DAILY_RESULT_STATUS } from "@/lib/constants";
 import { getCategoryColorKey } from "@/lib/category-ui";
@@ -22,6 +23,7 @@ import {
   fetchDailyResult,
   fetchHighlights,
   fetchSeasonalTitles,
+  fetchStreak,
 } from "@/lib/api-client";
 
 export const dynamic = "force-dynamic";
@@ -34,10 +36,12 @@ function formatTodayLabel(date = new Date()): string {
 
 export default async function Home() {
   const todayKey = getTodayKey();
-  const [categoriesResponse, dailyResultResponse, highlights] = await Promise.all([
+  const [categoriesResponse, dailyResultResponse, highlights, streakData] = await Promise.all([
     fetchCategories(true),
     fetchDailyResult(todayKey),
     fetchHighlights(),
+    // ストリークは補助情報のため失敗してもページ全体をクラッシュさせない
+    fetchStreak().catch(() => ({ streak: 0, playedToday: false })),
   ]);
 
   const categories = categoriesResponse.categories
@@ -77,6 +81,7 @@ export default async function Home() {
   const isConfirmed = dailyResult.status === DAILY_RESULT_STATUS.CONFIRMED;
   const xpSummaryLabel = isConfirmed ? "今日の獲得XP" : "未確定XP合計";
   const xpSummaryValue = totalXpEarned;
+  const { streak, playedToday } = streakData;
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
@@ -104,6 +109,27 @@ export default async function Home() {
             </Badge>
           </div>
 
+          <StreakBanner streak={streak} playedToday={playedToday} />
+
+          {/* メインCTA */}
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Button asChild size="lg" className="shadow-sm">
+              <Link href="/play" data-testid="home-play">
+                プレイを記録する
+              </Link>
+            </Button>
+            {/* 「今日を確定する」は totalPlays（日次結果API）で判定。
+                playedToday（ストリークAPI）と意味的に等価だが、
+                日次結果と同一のデータソースを使いデータ不整合を防ぐ */}
+            {!isConfirmed && totalPlays > 0 && (
+              <Button variant="confirm" asChild size="lg" className="shadow-sm">
+                <Link href="/result" data-testid="home-confirm">
+                  今日を確定する
+                </Link>
+              </Button>
+            )}
+          </div>
+
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {/* プレイ数カード */}
             <div className="group rounded-lg border bg-card/80 p-4 backdrop-blur-sm transition-all hover:shadow-md">
@@ -112,9 +138,12 @@ export default async function Home() {
                 <span>今日のプレイ</span>
               </div>
               <p className="mt-2 text-3xl font-bold tracking-tight">
-                {totalPlays}
+                {totalPlays > 0 ? totalPlays : <span className="text-muted-foreground">0</span>}
                 <span className="ml-1 text-lg font-medium text-muted-foreground">回</span>
               </p>
+              {totalPlays === 0 && (
+                <p className="mt-1 text-xs text-muted-foreground">さあ、記録しよう！</p>
+              )}
             </div>
             {/* XPカード */}
             <div className="group rounded-lg border bg-xp-glow p-4 backdrop-blur-sm transition-all hover:shadow-md">
@@ -126,23 +155,14 @@ export default async function Home() {
                 <span className="text-xp-gradient">+{xpSummaryValue}</span>
                 <span className="ml-1 text-lg font-medium text-amber-600 dark:text-amber-400">XP</span>
               </p>
+              {xpSummaryValue === 0 && (
+                <p className="mt-1 text-xs text-muted-foreground">XPを積み上げよう！</p>
+              )}
             </div>
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Button asChild size="lg" className="shadow-sm">
-              <Link href="/play" data-testid="home-play">
-                プレイを記録する
-              </Link>
-            </Button>
-            {!isConfirmed && (
-              <Button variant="confirm" asChild size="lg" className="shadow-sm">
-                <Link href="/result" data-testid="home-confirm">
-                  今日を確定する
-                </Link>
-              </Button>
-            )}
-            <Button variant="outline" asChild size="lg">
+          <div className="mt-4 flex justify-end">
+            <Button variant="outline" asChild size="sm">
               <Link href="/skills" data-testid="home-skills">
                 スキルツリーを見る
               </Link>
@@ -161,7 +181,7 @@ export default async function Home() {
           <div className="space-y-4">
             {categories.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                まだカテゴリが登録されていません。
+                カテゴリを登録して、最初の記録を始めよう！
               </p>
             ) : (
               categories.map((category) => {
@@ -235,7 +255,7 @@ export default async function Home() {
             {categories.length === 0 ? (
               <Card>
                 <CardContent className="py-6 text-sm text-muted-foreground">
-                  週ランクはカテゴリ登録後に表示されます。
+                  カテゴリを登録すると、週ランクが表示されます！
                 </CardContent>
               </Card>
             ) : (

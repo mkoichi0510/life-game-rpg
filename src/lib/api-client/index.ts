@@ -152,3 +152,12 @@ export function fetchSeasonalTitles(categoryId: string) {
 export function fetchHighlights() {
   return requestJson<HighlightsResponse>("/api/highlights");
 }
+
+export type StreakResponse = {
+  streak: number;
+  playedToday: boolean;
+};
+
+export function fetchStreak() {
+  return requestJson<StreakResponse>("/api/streak");
+}
