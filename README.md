@@ -146,9 +146,6 @@ npm run db:studio
 # スキーマを levup-api の変更に合わせて同期（このリポジトリでのスキーマ変更方法）
 npx prisma db pull
 npm run db:generate
-
-# Prisma Clientを再生成
-npm run db:generate
 ```
 
 > ~~`npm run db:migrate`~~ — 禁止。スキーマ変更は levup-api で行うこと。
