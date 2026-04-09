@@ -130,6 +130,9 @@ mise run db
 
 ### データベース関連
 
+> **マイグレーション禁止**: このリポジトリでは `prisma migrate` および `prisma db push` を実行しないでください。
+> スキーマ変更は **levup-api リポジトリ** で行い、このリポジトリは `npx prisma db pull` で同期します。
+
 ```bash
 # DBをDockerで起動
 npm run docker:up
@@ -140,15 +143,13 @@ npm run docker:down
 # Prisma Studio（DBビューア）を起動
 npm run db:studio
 
-# マイグレーションを作成・適用
-npm run db:migrate
-
-# スキーマをDBにプッシュ（開発用）
-npm run db:push
-
-# Prisma Clientを再生成
+# スキーマを levup-api の変更に合わせて同期（このリポジトリでのスキーマ変更方法）
+npx prisma db pull
 npm run db:generate
 ```
+
+> ~~`npm run db:migrate`~~ — 禁止。スキーマ変更は levup-api で行うこと。
+> ~~`npm run db:push`~~ — 禁止。同上。
 
 ### 開発
 
