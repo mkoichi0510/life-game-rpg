@@ -25,6 +25,33 @@
 | `docs/ux-spec.md` | 画面仕様、ユーザーフロー、インタラクション設計 |
 | `docs/open-questions.md` | 未決定事項、検討中の設計判断 |
 
+## ドキュメント管理方針
+
+<important>
+**仕様書のセット管理**: 機能ごとの仕様は `docs/[feature]/overview.md`（高位概要）+ `docs/[feature]/spec.md`（詳細）のセットで管理する。
+
+**既存docs（フラット構成）との併存**:
+- 全体設計（既存・触らない）: `docs/architecture.md`, `docs/data-model.md`, `docs/design-system.md`, `docs/state-machine.md`, `docs/ux-spec.md`, `docs/spec_v1.0.md`, `docs/open-questions.md`, `docs/phase2-plan.md`
+- 機能別（新規分はここ）: `docs/[feature]/overview.md` + `docs/[feature]/spec.md`
+
+**コミット前の判断**:
+- `src/` を編集 → 影響する `docs/[feature]/` の更新が必要かチェック
+- 必要なら `/spec-doc <feature名> --update` を起動
+- ドキュメント更新を伴う場合は「コード変更」と「docs変更」のコミットを分けるか、メッセージで明示
+</important>
+
+### feature ディレクトリ命名規則
+
+- kebab-case（例: `category-api`, `play-log`, `daily-confirmation`, `skill-tree-node-unlock`）
+- ドメイン語彙ベース（API path をそのまま使わない）
+
+### spec-doc Skill
+
+- `/spec-doc` — 直近差分から自動ドラフト
+- `/spec-doc <feature名>` — ゼロから作成
+- `/spec-doc <feature名> --update` — 既存更新
+- 詳細: `.claude/skills/spec-doc/SKILL.md`
+
 ## 開発時の注意事項
 
 - **パッケージマネージャー**: pnpm を使用（npm は使用しない）
