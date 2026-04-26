@@ -117,4 +117,20 @@ description: 機能仕様書（overview.md + spec.md）を `docs/[feature]/` に
 
 ## 検証フィードバック
 
-このセクションは初回検証（4機能ドラフト生成）後に追記する。生成物の品質課題と SKILL.md / テンプレートへの修正を記録する。
+### 2026-04-26 初回検証（5 feature ドラフト生成）
+
+**対象**: `category-api`, `action-api`, `play-log`, `daily-confirmation`, `skill-tree-node-unlock`
+
+**得た所見と SKILL.md / テンプレートへの反映**:
+
+1. **テンプレ過剰**: 詳細仕様テンプレ（`references/template.md`）の「画面仕様」「状態遷移」章は CRUD 系機能では空になりやすい。テンプレ側に `> 該当する場合のみ記述` のマーカーは入っているので、Skill 本文 Step 2B 末尾「該当しない章は削除」を堅持
+2. **既存 docs への参照集中化が有効**: `data-model.md`, `state-machine.md`, `ux-spec.md`, `design-system.md` への相対リンク多用で冗長な再記述を避けられた。spec.md 側で「詳細は `../<file>.md` を参照」スタイルが定着 → ルール「重複排除」を継続
+3. **feature 間相互リンクの追加が必要**: `play-log` と `daily-confirmation` のように密結合な機能では関連 feature の overview/spec へリンクを貼るのが自然。`references/template-overview.md` の「関連ドキュメント」枠で他 feature リンクを例示する形に拡張する
+4. **エラー表のフォーマット確定**: 「エラー / HTTP Status / code / 発生条件」の 4 列が運用しやすかった。`references/template.md` §5 のフォーマットを推奨形式として固定
+5. **更新履歴の最低限化**: 初版時点で更新履歴は `日付 / 変更内容 / 関連 PR` の 1 行のみで十分。PR 番号は確定後に追記する運用とする
+
+**未対応 / 次回検証で確認したい項目**:
+
+- モード A（コード変更ドラフト）の自動 feature 推定精度（複数 feature にまたがる差分でどう振り分けるか）
+- モード C（既存更新）で「変更箇所のみ」をきれいに反映できるか（既存記述の保護精度）
+- CLAUDE.md / AGENTS.md の「実装済み機能」表との同期提案ロジック
